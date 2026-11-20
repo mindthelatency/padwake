@@ -104,10 +104,6 @@ make launch-wow
 
 ---
 
-## Packaging, Signing, Legal & Naming Guide
+## License
 
-See [docs/DISTRIBUTION_AND_LEGAL.md](docs/DISTRIBUTION_AND_LEGAL.md) for the complete roadmap covering:
-- Turning this into a signed & notarized macOS menu-bar `.app` (Tier 1 vs Tier 2 DriverKit/virtual HID)
-- Mac App Store vs Direct Distribution requirements & entitlements
-- Legal, trademark, interoperability, and game ToS / anti-cheat checklist
-- Catchy trademark-free app name shortlist & GitHub/Google discoverability tips
+Released under the [MIT License](LICENSE).
