@@ -1,0 +1,47 @@
+{
+    "configVersion": 4,
+    "configs": [
+        {
+            "comment": "USB Pro Gamepad (VID 0x057E = 1406, PID 0x2069 = 8297)",
+            "vendorID": 1406,
+            "productID": 8297,
+            "name": "USB Pro Gamepad",
+            "labelStyle": "Reverse",
+            "rawButtonMappings": [
+                { "comment": "B (Bottom / South)", "rawIndex": 0,  "button": "PAD1" },
+                { "comment": "A (Right / East)",   "rawIndex": 1,  "button": "PAD2" },
+                { "comment": "Y (Left / West)",    "rawIndex": 2,  "button": "PAD3" },
+                { "comment": "X (Top / North)",    "rawIndex": 3,  "button": "PAD4" },
+                { "comment": "R Shoulder",         "rawIndex": 4,  "button": "PADRSHOULDER" },
+                { "comment": "ZR Trigger",         "rawIndex": 5,  "button": "PADRTRIGGER" },
+                { "comment": "Plus (+)",           "rawIndex": 6,  "button": "PADFORWARD" },
+                { "comment": "Right Stick Click",  "rawIndex": 7,  "button": "PADRSTICK" },
+                { "comment": "D-Pad Down",         "rawIndex": 8,  "button": "PADDDOWN" },
+                { "comment": "D-Pad Right",        "rawIndex": 9,  "button": "PADDRIGHT" },
+                { "comment": "D-Pad Left",         "rawIndex": 10, "button": "PADDLEFT" },
+                { "comment": "D-Pad Up",           "rawIndex": 11, "button": "PADDUP" },
+                { "comment": "L Shoulder",         "rawIndex": 12, "button": "PADLSHOULDER" },
+                { "comment": "ZL Trigger",         "rawIndex": 13, "button": "PADLTRIGGER" },
+                { "comment": "Minus (-)",          "rawIndex": 14, "button": "PADBACK" },
+                { "comment": "Left Stick Click",   "rawIndex": 15, "button": "PADLSTICK" },
+                { "comment": "Home",               "rawIndex": 16, "button": "PADSYSTEM" },
+                { "comment": "Capture",            "rawIndex": 17, "button": "PADSOCIAL" },
+                { "comment": "GR (Right Paddle)",  "rawIndex": 18, "button": "PADPADDLE1" },
+                { "comment": "GL (Left Paddle)",   "rawIndex": 19, "button": "PADPADDLE2" },
+                { "comment": "C Button",           "rawIndex": 20, "button": "PADPADDLE3" }
+            ],
+            "rawAxisMappings": [
+                { "comment": "Left Stick X",  "rawIndex": 0, "axis": "LStickX" },
+                { "comment": "Left Stick Y",  "rawIndex": 1, "axis": "LStickY" },
+                { "comment": "Right Stick X", "rawIndex": 2, "axis": "RStickX" },
+                { "comment": "Right Stick Y", "rawIndex": 3, "axis": "RStickY" }
+            ],
+            "axisConfigs": [
+                { "axis": "LStickX", "deadzone": 0.08 },
+                { "axis": "LStickY", "deadzone": 0.08 },
+                { "axis": "RStickX", "deadzone": 0.08 },
+                { "axis": "RStickY", "deadzone": 0.08 }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+# Build artifacts
+bin/
+build/
+*.o
+*.dmg
+
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*

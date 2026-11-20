@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PadWake — Wake your USB gamepad on macOS</title>
+  <meta name="description" content="A tiny, native macOS menu-bar utility that wakes sleeping USB HID gamepads (057E:2069), lights up your Player LED, and fixes macOS's SDL2 MFi veto." />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <meta property="og:title" content="PadWake for macOS" />
+  <meta property="og:description" content="Tiny native macOS menu-bar utility to wake sleeping USB HID gamepads and fix SDL2 detection." />
+  <meta property="og:image" content="assets/icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#" class="brand" aria-label="PadWake home">
+        <img src="assets/favicon.png" alt="" class="brand-icon" width="24" height="24" />
+        <span class="brand-name">PadWake</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#why-padwake">Why PadWake</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/mindthelatency/padwake" class="nav-github" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-icon-wrap">
+          <img src="assets/icon.png" alt="PadWake app icon — a cute dark gamepad with a winking cyan face and glowing lightning spark" class="hero-icon" width="128" height="128" />
+        </div>
+        <h1>Wake your sleeping USB gamepad on macOS.</h1>
+        <p class="hero-lead">
+          A tiny, zero-dependency menu-bar utility that sends the USB wake handshake,
+          lights up your Player LED, and fixes macOS's SDL2 controller veto—so you just plug in and play.
+        </p>
+        <div class="hero-actions">
+          <a href="https://github.com/mindthelatency/padwake/releases/latest" class="btn btn-primary" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M8 2.5v7.5m0 0L4.75 6.75M8 10l3.25-3.25M2.5 13h11"/>
+            </svg>
+            Download for macOS
+          </a>
+          <a href="#install" class="btn btn-secondary">Build from source</a>
+        </div>
+        <p class="hero-meta">
+          Universal (Apple Silicon &amp; Intel) <span aria-hidden="true">·</span> macOS 13+ <span aria-hidden="true">·</span> No Homebrew or <code>sudo</code>
+        </p>
+      </div>
+    </section>
+
+    <!-- Interactive Menu Bar Showcase -->
+    <section class="showcase" aria-label="Interactive PadWake menu-bar preview">
+      <div class="container">
+        <div class="mac-stage">
+          <!-- Simulated macOS Menu Bar -->
+          <div class="menubar" aria-hidden="true">
+            <div class="menubar-left">
+              <span class="apple-dot"></span>
+              <span class="menubar-item bold">Finder</span>
+              <span class="menubar-item">File</span>
+              <span class="menubar-item">Edit</span>
+              <span class="menubar-item">View</span>
+            </div>
+            <div class="menubar-right">
+              <span class="menubar-pill" id="menubar-icon" title="PadWake">
+                <svg viewBox="0 0 20 14" width="16" height="12" fill="currentColor">
+                  <path d="M6.2 2C3.6 2 1.8 4.4 1.3 8.1c-.3 2 .8 3.9 2.5 3.9 1.2 0 2-.8 2.8-1.9.4-.6.9-.9 1.7-.9h3.4c.8 0 1.3.3 1.7.9.8 1.1 1.6 1.9 2.8 1.9 1.7 0 2.8-1.9 2.5-3.9C18.2 4.4 16.4 2 13.8 2H6.2zm-.2 2.4a.75.75 0 01.75.75v.85h.85a.75.75 0 010 1.5h-.85v.85a.75.75 0 01-1.5 0V7.5H4.4a.75.75 0 010-1.5h.85v-.85A.75.75 0 016 4.4zm7.7.3a.85.85 0 110 1.7.85.85 0 010-1.7zm1.7 1.7a.85.85 0 110 1.7.85.85 0 010-1.7zm-3.4 0a.85.85 0 110 1.7.85.85 0 010-1.7zm1.7 1.7a.85.85 0 110 1.7.85.85 0 010-1.7z"/>
+                </svg>
+              </span>
+              <span class="menubar-clock">Fri 13:42</span>
+            </div>
+          </div>
+
+          <!-- Interactive PadWake Popover -->
+          <div class="popover-anchor">
+            <div class="popover-caret" aria-hidden="true"></div>
+            <div class="popover" role="region" aria-label="Interactive PadWake app preview">
+              <div class="pop-header">
+                <img src="assets/favicon.png" alt="" class="pop-app-icon" width="34" height="34" />
+                <div class="pop-title-group">
+                  <div class="pop-title">PadWake</div>
+                  <div class="pop-status">
+                    <span class="status-dot awake" id="status-dot"></span>
+                    <span id="status-label">Awake &amp; Streaming</span>
+                  </div>
+                </div>
+                <span class="vidpid-pill">057E:2069</span>
+              </div>
+
+              <div class="pop-divider"></div>
+
+              <button type="button" class="pop-wake-btn" id="wake-btn">
+                <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true">
+                  <path d="M9.3 1.2L3.1 8.8h4.2l-.6 6 6.2-7.6H8.7l.6-6z"/>
+                </svg>
+                <span>Wake Controller</span>
+              </button>
+
+              <div class="pop-row">
+                <span class="pop-label">Player LED</span>
+                <div class="segmented" role="group" aria-label="Player LED">
+                  <button type="button" class="seg-btn active" data-led="1">P1</button>
+                  <button type="button" class="seg-btn" data-led="2">P2</button>
+                  <button type="button" class="seg-btn" data-led="3">P3</button>
+                  <button type="button" class="seg-btn" data-led="4">P4</button>
+                </div>
+              </div>
+
+              <!-- Cute physical LED preview bar -->
+              <div class="led-strip" aria-label="Controller player LED indicator">
+                <span class="led-dot lit" data-dot="1"></span>
+                <span class="led-dot" data-dot="2"></span>
+                <span class="led-dot" data-dot="3"></span>
+                <span class="led-dot" data-dot="4"></span>
+              </div>
+
+              <details class="pop-tester" id="tester-details" open>
+                <summary>Live Input Tester</summary>
+                <div class="tester-body">
+                  <div class="sticks">
+                    <div class="stick-unit">
+                      <div class="stick-ring">
+                        <div class="stick-cross-v"></div>
+                        <div class="stick-cross-h"></div>
+                        <div class="stick-dot" id="stick-l"></div>
+                      </div>
+                      <span>Left Stick</span>
+                    </div>
+                    <div class="stick-unit">
+                      <div class="stick-ring">
+                        <div class="stick-cross-v"></div>
+                        <div class="stick-cross-h"></div>
+                        <div class="stick-dot" id="stick-r"></div>
+                      </div>
+                      <span>Right Stick</span>
+                    </div>
+                  </div>
+                  <div class="tester-buttons" id="tester-readout">
+                    Plug in a controller or click Wake above to preview
+                  </div>
+                </div>
+              </details>
+
+              <div class="pop-divider"></div>
+
+              <label class="pop-switch-row">
+                <div>
+                  <div class="pop-label">Fix macOS SDL2 MFi Veto</div>
+                  <div class="pop-sub">Sets <code>SDL_JOYSTICK_MFI=0</code> for launchers</div>
+                </div>
+                <input type="checkbox" class="mac-switch" checked />
+              </label>
+
+              <div class="pop-footer">
+                <label class="pop-check">
+                  <input type="checkbox" checked />
+                  <span>Launch at Login</span>
+                </label>
+                <span class="pop-quit">Quit</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="stage-caption">
+            Interactive preview — click <strong>Wake Controller</strong> or switch <strong>P1–P4</strong>. If your gamepad is awake right now, move the sticks to test it live in your browser.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- What PadWake solves differently -->
+    <section class="section" id="why-padwake">
+      <div class="container narrow">
+        <h2>What PadWake solves differently</h2>
+        <p class="diff-lead">
+          Most macOS helpers rely on Bluetooth virtual-HID drivers or only send the USB wake packet.
+          PadWake stays lightweight over USB-C and fixes the second macOS quirk that still leaves games
+          seeing zero controllers.
+        </p>
+
+        <dl class="diff-list">
+          <div class="diff-row">
+            <dt>Fixes the macOS SDL2 veto</dt>
+            <dd>
+              Recent macOS versions report <code>GCController</code> support for <code>057E:2069</code>
+              without actually publishing a controller, causing embedded-SDL2 games to skip it even after
+              waking. PadWake sets <code>SDL_JOYSTICK_MFI=0</code> for your session so SDL2 reads the HID
+              stream directly.
+            </dd>
+          </div>
+          <div class="diff-row">
+            <dt>No restricted entitlements</dt>
+            <dd>
+              No DriverKit extensions, no virtual-HID entitlement approvals, no Homebrew, and no
+              <code>sudo</code>. Compile locally in seconds with Apple's built-in tools or notarize with
+              a standard Developer ID certificate.
+            </dd>
+          </div>
+          <div class="diff-row">
+            <dt>Native USB-C HID &amp; paddles</dt>
+            <dd>
+              Wakes the hardware's own 21-button, 4-axis HID stream—including rear grip paddles
+              (<code>GL</code>, <code>GR</code>) and <code>C</code>—and installs ready-made
+              <code>gamecontrollerdb.txt</code> and JSON mappings with strictly 1:1 input.
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- Install / Build -->
+    <section class="section section-tinted" id="install">
+      <div class="container narrow">
+        <h2>Install or build from source</h2>
+
+        <div class="install-box">
+          <div class="install-tabs" role="tablist" aria-label="Install method">
+            <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="app">Menu-Bar App</button>
+            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="cli">CLI &amp; Daemon</button>
+            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="release">Sign &amp; Notarize</button>
+          </div>
+
+          <div class="code-panel">
+            <pre><code id="install-code">git clone https://github.com/mindthelatency/padwake.git
+cd padwake
+make install-app</code></pre>
+            <button type="button" class="copy-btn" id="copy-btn" aria-label="Copy commands">Copy</button>
+          </div>
+
+          <p class="install-note" id="install-note">
+            Builds a Universal Binary, installs <code>/Applications/PadWake.app</code>, and opens it in your menu bar.
+            Enable <strong>Launch at Login</strong> inside the popover and restart your game launcher once.
+          </p>
+        </div>
+
+        <div class="facts-row">
+          <div class="fact">
+            <span class="fact-label">Button Support</span>
+            <span class="fact-value">All 21 buttons incl. GL, GR &amp; C</span>
+          </div>
+          <div class="fact">
+            <span class="fact-label">Idle Footprint</span>
+            <span class="fact-value">Event-driven IOKit (~0% CPU)</span>
+          </div>
+          <div class="fact">
+            <span class="fact-label">Distribution</span>
+            <span class="fact-value">Notarized DMG or build locally</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img src="assets/favicon.png" alt="" width="20" height="20" />
+          <span>PadWake</span>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/mindthelatency/padwake" target="_blank" rel="noopener">Source on GitHub</a>
+          <a href="https://github.com/mindthelatency/padwake/blob/main/docs/DISTRIBUTION_AND_LEGAL.md" target="_blank" rel="noopener">Signing &amp; Legal Notes</a>
+          <a href="https://github.com/mindthelatency/padwake/releases" target="_blank" rel="noopener">Releases</a>
+        </div>
+      </div>
+      <p class="disclaimer">
+        PadWake is an independent open-source interoperability utility. It is not affiliated with, endorsed by,
+        or sponsored by any console manufacturer, game studio, or OS vendor. All product names and trademarks
+        belong to their respective owners.
+      </p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

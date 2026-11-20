@@ -1,0 +1,4 @@
+# USB Gamepad (VID 0x057E, PID 0x2069) for macOS SDL2
+# Positional face layout (South=B->a, East=A->b, West=Y->x, North=X->y), inverted Y axes (a1~/a3~)
+030000007e0500006920000001020000,USB Pro Gamepad,a:b0,b:b1,x:b2,y:b3,rightshoulder:b4,righttrigger:b5,start:b6,rightstick:b7,dpdown:b8,dpright:b9,dpleft:b10,dpup:b11,leftshoulder:b12,lefttrigger:b13,back:b14,leftstick:b15,guide:b16,misc1:b17,paddle1:b18,paddle2:b19,paddle3:b20,leftx:a0,lefty:a1~,rightx:a2,righty:a3~,platform:Mac OS X,
+030000007e0500006920000000000000,USB Pro Gamepad,a:b0,b:b1,x:b2,y:b3,rightshoulder:b4,righttrigger:b5,start:b6,rightstick:b7,dpdown:b8,dpright:b9,dpleft:b10,dpup:b11,leftshoulder:b12,lefttrigger:b13,back:b14,leftstick:b15,guide:b16,misc1:b17,paddle1:b18,paddle2:b19,paddle3:b20,leftx:a0,lefty:a1~,rightx:a2,righty:a3~,platform:Mac OS X,
