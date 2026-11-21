@@ -605,6 +605,7 @@ struct StickDotView: View {
     let label: String
     let rawX: Int32
     let rawY: Int32
+    var clicked: Bool = false
 
     private var normX: CGFloat {
         max(-1, min(1, CGFloat(rawX - 2048) / 2048.0))
@@ -615,30 +616,226 @@ struct StickDotView: View {
     }
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 3) {
             ZStack {
                 Circle()
-                    .fill(Color.primary.opacity(0.06))
-                    .overlay(Circle().stroke(Color.primary.opacity(0.18), lineWidth: 1))
+                    .fill(clicked ? Color.accentColor.opacity(0.22) : Color.primary.opacity(0.06))
+                    .overlay(
+                        Circle().stroke(
+                            clicked ? Color.accentColor : Color.primary.opacity(0.18),
+                            lineWidth: clicked ? 1.5 : 1
+                        )
+                    )
                 Path { p in
-                    p.move(to: CGPoint(x: 24, y: 4))
-                    p.addLine(to: CGPoint(x: 24, y: 44))
-                    p.move(to: CGPoint(x: 4, y: 24))
-                    p.addLine(to: CGPoint(x: 44, y: 24))
+                    p.move(to: CGPoint(x: 22, y: 4))
+                    p.addLine(to: CGPoint(x: 22, y: 40))
+                    p.move(to: CGPoint(x: 4, y: 22))
+                    p.addLine(to: CGPoint(x: 40, y: 22))
                 }
                 .stroke(Color.primary.opacity(0.1), lineWidth: 0.75)
 
                 Circle()
                     .fill(Color.accentColor)
-                    .frame(width: 10, height: 10)
-                    .offset(x: normX * 16, y: normY * 16)
+                    .frame(width: clicked ? 11 : 9, height: clicked ? 11 : 9)
+                    .offset(x: normX * 14, y: normY * 14)
             }
-            .frame(width: 48, height: 48)
+            .frame(width: 44, height: 44)
 
             Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 9, weight: clicked ? .bold : .medium, design: .rounded))
+                .foregroundStyle(clicked ? Color.accentColor : .secondary)
         }
+    }
+}
+
+struct TesterPillView: View {
+    let label: String
+    let active: Bool
+    var minWidth: CGFloat = 22
+    var height: CGFloat = 18
+
+    var body: some View {
+        Text(label)
+            .font(.system(size: 9.5, weight: .semibold, design: .rounded))
+            .foregroundStyle(active ? Color.white : Color.primary.opacity(0.8))
+            .frame(minWidth: minWidth, minHeight: height)
+            .padding(.horizontal, 4)
+            .background(active ? Color.accentColor : Color.primary.opacity(0.07))
+            .overlay(
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .stroke(active ? Color.accentColor : Color.primary.opacity(0.14), lineWidth: 0.75)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+    }
+}
+
+struct TesterFaceButtonView: View {
+    let label: String
+    let active: Bool
+
+    var body: some View {
+        Text(label)
+            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .foregroundStyle(active ? Color.white : Color.primary.opacity(0.85))
+            .frame(width: 20, height: 20)
+            .background(active ? Color.accentColor : Color.primary.opacity(0.08))
+            .overlay(
+                Circle().stroke(active ? Color.accentColor : Color.primary.opacity(0.18), lineWidth: 0.9)
+            )
+            .clipShape(Circle())
+    }
+}
+
+struct TesterDPadKeyView: View {
+    let symbol: String
+    let active: Bool
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.system(size: 8.5, weight: .bold))
+            .foregroundStyle(active ? Color.white : Color.primary.opacity(0.75))
+            .frame(width: 17, height: 17)
+            .background(active ? Color.accentColor : Color.primary.opacity(0.08))
+            .overlay(
+                RoundedRectangle(cornerRadius: 3.5, style: .continuous)
+                    .stroke(active ? Color.accentColor : Color.primary.opacity(0.15), lineWidth: 0.75)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 3.5, style: .continuous))
+    }
+}
+
+struct Switch2VisualTesterView: View {
+    let input: pw_input_state_t
+    let pressedButtons: [String]
+
+    private func isPressed(_ bit: Int) -> Bool {
+        (input.buttons & (1 << bit)) != 0
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            // Top Row: Triggers, Shoulders & Center System Buttons
+            HStack(spacing: 4) {
+                HStack(spacing: 3) {
+                    TesterPillView(label: "ZL", active: isPressed(13), minWidth: 22)
+                    TesterPillView(label: "L", active: isPressed(12), minWidth: 18)
+                }
+                Spacer(minLength: 2)
+                HStack(spacing: 3) {
+                    TesterPillView(label: "−", active: isPressed(14), minWidth: 16)
+                    TesterPillView(label: "Cap", active: isPressed(17), minWidth: 24)
+                    Image(systemName: "house.fill")
+                        .font(.system(size: 8.5, weight: .semibold))
+                        .foregroundStyle(isPressed(16) ? Color.white : Color.primary.opacity(0.8))
+                        .frame(width: 20, height: 18)
+                        .background(isPressed(16) ? Color.accentColor : Color.primary.opacity(0.07))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                .stroke(isPressed(16) ? Color.accentColor : Color.primary.opacity(0.14), lineWidth: 0.75)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                    TesterPillView(label: "C", active: isPressed(20), minWidth: 18)
+                    TesterPillView(label: "+", active: isPressed(6), minWidth: 16)
+                }
+                Spacer(minLength: 2)
+                HStack(spacing: 3) {
+                    TesterPillView(label: "R", active: isPressed(4), minWidth: 18)
+                    TesterPillView(label: "ZR", active: isPressed(5), minWidth: 22)
+                }
+            }
+
+            // Middle Row: D-Pad · L3/R3 Analog Sticks · Switch 2 Face Diamond (X Top, Y Left, A Right, B Bottom)
+            HStack(alignment: .center, spacing: 8) {
+                // D-Pad Cross
+                VStack(spacing: 2) {
+                    TesterDPadKeyView(symbol: "chevron.up", active: isPressed(11))
+                    HStack(spacing: 2) {
+                        TesterDPadKeyView(symbol: "chevron.left", active: isPressed(10))
+                        Color.clear.frame(width: 15, height: 15)
+                        TesterDPadKeyView(symbol: "chevron.right", active: isPressed(9))
+                    }
+                    TesterDPadKeyView(symbol: "chevron.down", active: isPressed(8))
+                }
+                .frame(width: 55)
+
+                Spacer(minLength: 2)
+
+                // Dual Sticks with L3 / R3 Click Highlight
+                HStack(spacing: 10) {
+                    StickDotView(label: "L3", rawX: input.lx, rawY: input.ly, clicked: isPressed(15))
+                    StickDotView(label: "R3", rawX: input.rx, rawY: input.ry, clicked: isPressed(7))
+                }
+
+                Spacer(minLength: 2)
+
+                // Switch 2 Diamond: X Top (b3), Y Left (b2), A Right (b1), B Bottom (b0)
+                VStack(spacing: 1) {
+                    TesterFaceButtonView(label: "X", active: isPressed(3))
+                    HStack(spacing: 16) {
+                        TesterFaceButtonView(label: "Y", active: isPressed(2))
+                        TesterFaceButtonView(label: "A", active: isPressed(1))
+                    }
+                    TesterFaceButtonView(label: "B", active: isPressed(0))
+                }
+                .frame(width: 60)
+            }
+
+            // Bottom Row: Rear Grip Paddles (GL = b19, GR = b18)
+            HStack(spacing: 8) {
+                HStack(spacing: 4) {
+                    Text("GL")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                    Text("Rear Left")
+                        .font(.system(size: 9))
+                        .opacity(0.8)
+                }
+                .foregroundStyle(isPressed(19) ? Color.white : Color.primary.opacity(0.8))
+                .frame(maxWidth: .infinity, minHeight: 21)
+                .background(isPressed(19) ? Color.accentColor : Color.primary.opacity(0.06))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(isPressed(19) ? Color.accentColor : Color.primary.opacity(0.14), lineWidth: 0.8)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+                HStack(spacing: 4) {
+                    Text("GR")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                    Text("Rear Right")
+                        .font(.system(size: 9))
+                        .opacity(0.8)
+                }
+                .foregroundStyle(isPressed(18) ? Color.white : Color.primary.opacity(0.8))
+                .frame(maxWidth: .infinity, minHeight: 21)
+                .background(isPressed(18) ? Color.accentColor : Color.primary.opacity(0.06))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(isPressed(18) ? Color.accentColor : Color.primary.opacity(0.14), lineWidth: 0.8)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            }
+
+            // Live Button Summary
+            if pressedButtons.isEmpty {
+                Text("Press any button, rear paddle, or move sticks…")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(pressedButtons.joined(separator: "  •  "))
+                    .font(.system(size: 10.5, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.accentColor)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity)
+        .background(Color.primary.opacity(0.035))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.primary.opacity(0.08), lineWidth: 0.75)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .padding(.top, 4)
     }
 }
 
@@ -854,26 +1051,10 @@ struct PopoverView: View {
 
             // Live Input Tester
             DisclosureGroup("Live Input Tester", isExpanded: $model.showTester) {
-                VStack(spacing: 8) {
-                    HStack(spacing: 24) {
-                        StickDotView(label: "Left Stick", rawX: model.inputState.lx, rawY: model.inputState.ly)
-                        StickDotView(label: "Right Stick", rawX: model.inputState.rx, rawY: model.inputState.ry)
-                    }
-                    .padding(.top, 6)
-
-                    if pressedButtons.isEmpty {
-                        Text("Press any button or move sticks…")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text(pressedButtons.joined(separator: "  •  "))
-                            .font(.system(.caption, design: .rounded).weight(.semibold))
-                            .foregroundStyle(Color.accentColor)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
+                Switch2VisualTesterView(
+                    input: model.inputState,
+                    pressedButtons: pressedButtons
+                )
             }
             .font(.subheadline)
 
