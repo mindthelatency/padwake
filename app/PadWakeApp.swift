@@ -485,32 +485,53 @@ final class PadWakeModel: ObservableObject {
 
             var actions: [String] = []
 
-            // 1. Append SDL2 mapping lines idempotently into gamecontrollerdb.txt without clobbering existing data
+            // 1. Upsert SDL2 mapping lines idempotently into gamecontrollerdb.txt without clobbering other entries
             let dbDst = folder.appendingPathComponent("gamecontrollerdb.txt")
             let templateLines = try String(contentsOf: dbRes, encoding: .utf8)
                 .components(separatedBy: .newlines)
                 .filter { !$0.isEmpty && !$0.hasPrefix("#") }
 
             var existing: String
-            if fm.fileExists(atPath: dbDst.path) {
+            let dbExisted = fm.fileExists(atPath: dbDst.path)
+            if dbExisted {
                 existing = try Self.readTextPreservingEncoding(at: dbDst)
             } else {
                 existing = "# SDL2 Game Controller Mappings File\n"
             }
 
+            var lines = existing.components(separatedBy: "\n")
             var added = 0
-            for line in templateLines {
-                let guid = line.split(separator: ",").first.map(String.init) ?? line
-                if !Self.containsMapping(guid: guid, in: existing) {
-                    if !existing.hasSuffix("\n") { existing += "\n" }
-                    existing += "\n\(line)\n"
+            var updated = 0
+            for tpl in templateLines {
+                let guid = tpl.split(separator: ",").first.map(String.init) ?? tpl
+                let prefix = "\(guid),"
+                if let idx = lines.firstIndex(where: {
+                    let trimmed = $0.drop(while: { $0 == " " || $0 == "\t" })
+                    return !trimmed.hasPrefix("#") && trimmed.hasPrefix(prefix)
+                }) {
+                    if lines[idx].trimmingCharacters(in: .whitespacesAndNewlines) != tpl {
+                        lines[idx] = tpl
+                        updated += 1
+                    }
+                } else {
+                    if let last = lines.last, !last.isEmpty {
+                        lines.append("")
+                    }
+                    lines.append(tpl)
                     added += 1
                 }
             }
-            if added > 0 || !fm.fileExists(atPath: dbDst.path) {
-                try existing.write(to: dbDst, atomically: true, encoding: .utf8)
+            if added > 0 || updated > 0 || !dbExisted {
+                var out = lines.joined(separator: "\n")
+                if !out.hasSuffix("\n") { out += "\n" }
+                try out.write(to: dbDst, atomically: true, encoding: .utf8)
             }
-            actions.append(added > 0 ? "gamecontrollerdb.txt (+\(added))" : "gamecontrollerdb.txt (up to date)")
+            if added > 0 || updated > 0 {
+                let parts = [added > 0 ? "+\(added)" : nil, updated > 0 ? "~\(updated)" : nil].compactMap { $0 }
+                actions.append("gamecontrollerdb.txt (\(parts.joined(separator: ", ")))")
+            } else {
+                actions.append("gamecontrollerdb.txt (up to date)")
+            }
 
             // 2. WoW-specific config files
             if profile.kind == .wowWTF {

@@ -58,13 +58,24 @@ GCDB="$WOW_WTF/gamecontrollerdb.txt"
 CONFIG_WTF="$WOW_WTF/Config.wtf"
 PAD_JSON="$WOW_WTF/GamePadConfig_PadWake.json"
 
-# 1. Install SDL2 mapping entries idempotently into WTF/gamecontrollerdb.txt
+# 1. Upsert SDL2 mapping entries idempotently into WTF/gamecontrollerdb.txt
 touch "$GCDB"
 while IFS= read -r line; do
     [[ -z "$line" || "$line" == \#* ]] && continue
     guid="${line%%,*}"
     if awk -v g="${guid}," 'index($0, g) == 1 { found=1; exit } END { exit !found }' "$GCDB"; then
-        echo "[wow] SDL2 mapping for $guid already present in $GCDB"
+        if grep -qxF -- "$line" "$GCDB"; then
+            echo "[wow] SDL2 mapping for $guid already up to date in $GCDB"
+        else
+            TMP_GCDB="$(mktemp "$WOW_WTF/.gamecontrollerdb.txt.XXXXXX")"
+            awk -v g="${guid}," -v repl="$line" '
+                index($0, g) == 1 && !done { print repl; done=1; next }
+                { print }
+            ' "$GCDB" > "$TMP_GCDB"
+            chmod 644 "$TMP_GCDB"
+            mv -f "$TMP_GCDB" "$GCDB"
+            echo "[wow] Updated SDL2 mapping for $guid in $GCDB"
+        fi
     else
         printf '\n%s\n' "$line" >> "$GCDB"
         echo "[wow] Added SDL2 mapping for $guid to $GCDB"

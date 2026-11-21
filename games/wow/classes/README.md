@@ -11,7 +11,7 @@ Every class shares the same 4-layer modifier structure so switching specs or alt
 | `PADLTRIGGER` | **ZL** | Hold for **SHIFT** layer (`MULTIACTIONBAR1BUTTON1..8`) |
 | `PADRTRIGGER` | **ZR** | Hold for **CTRL** layer (`MULTIACTIONBAR2BUTTON1..8`) |
 | `ZL + ZR` | **ZL + ZR** | Hold for **SHIFT+CTRL** layer (`MULTIACTIONBAR3BUTTON1..4`) |
-| `PAD1`–`PAD4` | **B / A / Y / X** | Core rotational abilities (Base, ZL, ZR, ZL+ZR) |
+| `PAD1`–`PAD4` | **A / B / X / Y** | Core rotational abilities (Base, ZL, ZR, ZL+ZR — matched to physical Switch 2 labels) |
 | `PADDUP`–`PADDLEFT` | **D-Pad** | Combat utility, traps/totems/seals, party targeting (`ZL+D-Pad` for healers) |
 | `PADRSHOULDER` | **R** | Target Nearest Enemy (`ZL+R` = Previous Enemy, `ZR+R` = Nearest Friend) |
 | `PADLSHOULDER` | **L** | Interact with Target (`SoftTargetInteract=3`; `ZL+L` = Self, `ZR+L` = Assist) |
