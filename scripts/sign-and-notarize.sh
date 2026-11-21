@@ -20,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 APP_NAME="${APP_NAME:-PadWake}"
-VERSION="${VERSION:-1.4.0}"
+VERSION="${VERSION:-1.4.1}"
 DEVELOPER_ID="${DEVELOPER_ID:-}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 

@@ -1763,7 +1763,7 @@ local function printHelp()
         or (isForeverGamepadUI() and "Forever Crossbar UI" or "WoW Classic / Native C_GamePad")
     local _, specLabel = playerClass and detectActiveSpec(playerClass) or nil
     local specText = specLabel and (" [" .. specLabel .. "]") or ""
-    printMsg(string.format("WoW Forever & Classic Profiles v1.4.0 | Level %d %s%s | Preset: %s | Mode: %s",
+    printMsg(string.format("WoW Forever & Classic Profiles v1.4.1 | Level %d %s%s | Preset: %s | Mode: %s",
         level, tostring(playerClass or "?"), specText, tostring(ns.selectedPreset or "AUTO"), uiMode))
     printMsg("Commands:")
     printMsg("  /padwake apply [class] [--keep-bars] [--force-bindings]  Full setup: CVars, macros, bindings, DialogueUI Switch & level/spec bars")

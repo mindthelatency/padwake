@@ -2,7 +2,7 @@
 ## Title: PadWake Profiles
 ## Notes: Level- & talent-spec-aware World of Warcraft: Forever & Classic controller CVars, native PAD* bindings, DialogueUI Switch auto-config, starter macros, and auto-populated bars.
 ## Author: PadWake Contributors
-## Version: 1.4.0
+## Version: 1.4.1
 ## SavedVariablesPerCharacter: PadWakeProfilesCharDB
 
 SelectedPreset.lua
