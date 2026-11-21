@@ -5,7 +5,6 @@
             "comment": "USB Pro Gamepad (VID 0x057E = 1406, PID 0x2069 = 8297) — SDL2 canonical SDL_GameController indices",
             "vendorID": 1406,
             "productID": 8297,
-            "name": "USB Pro Gamepad",
             "labelStyle": "Letters",
             "rawButtonMappings": [
                 { "comment": "SDL A -> Physical A (East)",      "rawIndex": 0,  "button": "PAD1" },
