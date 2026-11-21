@@ -3,11 +3,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-WOW_WTF="/Applications/World of Warcraft/_forever_/WTF"
+WOW_WTF=""
 CLASS_PRESET="auto"
 
 usage() {
-    echo "Usage: $0 [--class <auto|warrior|paladin|hunter|rogue|priest|shaman|mage|warlock|druid>] [/path/to/World of Warcraft/_forever_/WTF]" >&2
+    echo "Usage: $0 [--class <auto|warrior|paladin|hunter|rogue|priest|deathknight|shaman|mage|warlock|druid>] [/path/to/World of Warcraft/<flavor>/WTF]" >&2
 }
 
 while [[ $# -gt 0 ]]; do
@@ -38,7 +38,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$CLASS_PRESET" in
-    auto|warrior|paladin|hunter|rogue|priest|shaman|mage|warlock|druid)
+    auto|warrior|paladin|hunter|rogue|priest|deathknight|shaman|mage|warlock|druid)
         CLASS_TOKEN="$(printf '%s' "$CLASS_PRESET" | tr '[:lower:]' '[:upper:]')"
         ;;
     *)
@@ -48,11 +48,29 @@ case "$CLASS_PRESET" in
         ;;
 esac
 
-if [[ ! -d "$WOW_WTF" ]]; then
-    echo "Error: WoW Forever WTF directory not found at: $WOW_WTF" >&2
+if [[ -z "$WOW_WTF" ]]; then
+    for flavor in _forever_ _classic_era_ _anniversary_ _classic_; do
+        candidate="/Applications/World of Warcraft/${flavor}"
+        if [[ -d "$candidate" ]]; then
+            WOW_WTF="${candidate}/WTF"
+            break
+        fi
+    done
+    WOW_WTF="${WOW_WTF:-/Applications/World of Warcraft/_forever_/WTF}"
+fi
+
+# Allow passing either the flavor root (e.g. .../_classic_era_) or its WTF directory
+if [[ "$(basename "$WOW_WTF")" != "WTF" && -d "$WOW_WTF" ]]; then
+    WOW_WTF="${WOW_WTF}/WTF"
+fi
+
+FLAVOR_PARENT="$(dirname "$WOW_WTF")"
+if [[ ! -d "$FLAVOR_PARENT" ]]; then
+    echo "Error: WoW flavor directory not found at: $FLAVOR_PARENT" >&2
     usage
     exit 1
 fi
+mkdir -p "$WOW_WTF"
 
 GCDB="$WOW_WTF/gamecontrollerdb.txt"
 CONFIG_WTF="$WOW_WTF/Config.wtf"

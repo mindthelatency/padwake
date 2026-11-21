@@ -11,6 +11,7 @@ enum WoWClassPreset: String, CaseIterable, Identifiable {
     case hunter
     case rogue
     case priest
+    case deathknight
     case shaman
     case mage
     case warlock
@@ -24,16 +25,17 @@ enum WoWClassPreset: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .auto:    return "Auto-detect in-game"
-        case .warrior: return "Warrior"
-        case .paladin: return "Paladin"
-        case .hunter:  return "Hunter"
-        case .rogue:   return "Rogue"
-        case .priest:  return "Priest"
-        case .shaman:  return "Shaman"
-        case .mage:    return "Mage"
-        case .warlock: return "Warlock"
-        case .druid:   return "Druid"
+        case .auto:        return "Auto-detect in-game"
+        case .warrior:     return "Warrior"
+        case .paladin:     return "Paladin"
+        case .hunter:      return "Hunter"
+        case .rogue:       return "Rogue"
+        case .priest:      return "Priest"
+        case .deathknight: return "Death Knight (Classic)"
+        case .shaman:      return "Shaman"
+        case .mage:        return "Mage"
+        case .warlock:     return "Warlock"
+        case .druid:       return "Druid"
         }
     }
 
@@ -51,6 +53,8 @@ enum WoWClassPreset: String, CaseIterable, Identifiable {
             return "0° turn · Stealth ZR bar · GR Kick · GL Stealth/Vanish"
         case .priest:
             return "115° cast · SoftFriend=3 · GR Scream · GL Shield · Smart Heal"
+        case .deathknight:
+            return "0° turn · GR Mind Freeze · GL Death Grip · AMS / Death Strike"
         case .shaman:
             return "0° turn · SoftFriend · GR Earth Shock · GL Indoor Ghost Wolf"
         case .mage:
@@ -65,9 +69,11 @@ enum WoWClassPreset: String, CaseIterable, Identifiable {
 
 struct DetectedWoWTarget: Identifiable, Equatable {
     var id: String { path }
+    let flavorName: String
     let label: String
     let path: String
     let isForever: Bool
+    let isClassic: Bool
     let isConfigured: Bool
     let hasDialogueUI: Bool
     let dialogueUISwitchMode: Bool
@@ -75,11 +81,17 @@ struct DetectedWoWTarget: Identifiable, Equatable {
 
 struct WoWSetupState {
     var targets: [DetectedWoWTarget] = []
+    var selectedPath: String? = nil
     var lastResult: String? = nil
     var lastResultIsError: Bool = false
 
     var primaryTarget: DetectedWoWTarget? {
-        targets.first(where: \.isForever) ?? targets.first
+        if let selectedPath, let match = targets.first(where: { $0.path == selectedPath }) {
+            return match
+        }
+        return targets.first(where: \.isForever)
+            ?? targets.first(where: \.isClassic)
+            ?? targets.first
     }
 
     var configuredCount: Int {
@@ -299,6 +311,40 @@ final class PadWakeModel: ObservableObject {
         wtfFolder.lastPathComponent == "WTF" ? wtfFolder.deletingLastPathComponent() : wtfFolder
     }
 
+    nonisolated private static let knownFlavorNames: [String: String] = [
+        "_forever_":         "WoW: Forever",
+        "_classic_era_":     "WoW Classic Era",
+        "_anniversary_":     "WoW Classic Anniversary",
+        "_classic_":         "WoW Classic",
+        "_classic_ptr_":     "WoW Classic PTR",
+        "_classic_era_ptr_": "WoW Classic Era PTR",
+        "_classic_beta_":    "WoW Classic Beta",
+        "_retail_":          "WoW Retail",
+        "_ptr_":             "WoW PTR",
+        "_xptr_":            "WoW PTR",
+    ]
+
+    nonisolated private static let flavorPriority: [String] = [
+        "_forever_",
+        "_classic_era_",
+        "_anniversary_",
+        "_classic_",
+        "_classic_ptr_",
+        "_classic_era_ptr_",
+        "_classic_beta_",
+        "_retail_",
+    ]
+
+    nonisolated private static func flavorKey(for folder: URL) -> String {
+        let root = flavorRoot(for: folder)
+        return root.lastPathComponent
+    }
+
+    nonisolated private static func friendlyFlavorName(for folder: URL) -> String {
+        let key = flavorKey(for: folder)
+        return knownFlavorNames[key] ?? displayLabel(for: folder)
+    }
+
     nonisolated private static func inspectWoWTarget(folder: URL) -> DetectedWoWTarget {
         let fm = FileManager.default
         let root = flavorRoot(for: folder)
@@ -341,11 +387,14 @@ final class PadWakeModel: ObservableObject {
             }
         }
 
+        let key = flavorKey(for: folder)
         let label = displayLabel(for: folder)
         return DetectedWoWTarget(
+            flavorName: friendlyFlavorName(for: folder),
             label: label,
             path: folder.standardizedFileURL.path,
-            isForever: label.hasPrefix("_forever_"),
+            isForever: key == "_forever_",
+            isClassic: key.contains("classic") || key == "_anniversary_",
             isConfigured: isConfigured,
             hasDialogueUI: hasDialogueUI,
             dialogueUISwitchMode: dialogueSwitch
@@ -369,45 +418,66 @@ final class PadWakeModel: ObservableObject {
             var seen = Set<String>()
             var targets: [DetectedWoWTarget] = []
 
-            func appendIfDir(_ path: String) {
-                let normalized = URL(fileURLWithPath: path).standardizedFileURL.path
+            func appendTarget(_ path: String, allowMissingWTF: Bool = false) {
+                let url = URL(fileURLWithPath: path).standardizedFileURL
+                let normalized = url.path
                 guard !seen.contains(normalized) else { return }
                 var isDir: ObjCBool = false
-                guard fm.fileExists(atPath: normalized, isDirectory: &isDir), isDir.boolValue else { return }
+                let exists = fm.fileExists(atPath: normalized, isDirectory: &isDir) && isDir.boolValue
+                if !exists {
+                    guard allowMissingWTF else { return }
+                    let parentPath = url.deletingLastPathComponent().path
+                    var parentIsDir: ObjCBool = false
+                    guard fm.fileExists(atPath: parentPath, isDirectory: &parentIsDir), parentIsDir.boolValue else {
+                        return
+                    }
+                }
                 seen.insert(normalized)
-                targets.append(Self.inspectWoWTarget(folder: URL(fileURLWithPath: normalized)))
+                targets.append(Self.inspectWoWTarget(folder: url))
             }
 
-            // Auto-detect WoW flavors under /Applications/World of Warcraft/*/WTF (_forever_ first)
-            let wowBase = URL(fileURLWithPath: Self.defaultWoWPath)
-            if let entries = try? fm.contentsOfDirectory(
-                at: wowBase, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]
-            ) {
-                let sorted = entries.sorted { a, b in
-                    if a.lastPathComponent == "_forever_" { return true }
-                    if b.lastPathComponent == "_forever_" { return false }
-                    return a.lastPathComponent < b.lastPathComponent
-                }
-                for entry in sorted {
-                    appendIfDir(entry.appendingPathComponent("WTF").path)
+            // Auto-detect all WoW flavors (Forever, Classic Era, Anniversary, Classic, Retail)
+            let candidateBases = [
+                URL(fileURLWithPath: Self.defaultWoWPath),
+                URL(fileURLWithPath: "/Applications/World of Warcraft Classic"),
+            ]
+            for wowBase in candidateBases {
+                if let entries = try? fm.contentsOfDirectory(
+                    at: wowBase, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]
+                ) {
+                    let sorted = entries.sorted { a, b in
+                        let ai = Self.flavorPriority.firstIndex(of: a.lastPathComponent) ?? Int.max
+                        let bi = Self.flavorPriority.firstIndex(of: b.lastPathComponent) ?? Int.max
+                        if ai != bi { return ai < bi }
+                        return a.lastPathComponent < b.lastPathComponent
+                    }
+                    for entry in sorted {
+                        let key = entry.lastPathComponent
+                        let wtfPath = entry.appendingPathComponent("WTF").path
+                        let isKnownFlavor = Self.knownFlavorNames[key] != nil
+                        appendTarget(wtfPath, allowMissingWTF: isKnownFlavor)
+                    }
                 }
             }
 
             for saved in savedSnapshot {
-                appendIfDir(saved)
+                appendTarget(saved, allowMissingWTF: false)
             }
 
             Task { @MainActor in
                 guard let self else { return }
                 self.wowState.targets = targets
+                if let sel = self.wowState.selectedPath, !targets.contains(where: { $0.path == sel }) {
+                    self.wowState.selectedPath = nil
+                }
             }
         }
     }
 
     func chooseWoWFolderAndInstall() {
         let panel = NSOpenPanel()
-        panel.title = "Select World of Warcraft: Forever WTF Folder"
-        panel.message = "Choose your _forever_/WTF folder (or the _forever_ folder itself) to install Switch 2 mappings and PadWakeProfiles."
+        panel.title = "Select World of Warcraft Folder"
+        panel.message = "Choose a WoW flavor folder (_forever_, _classic_era_, _classic_, _anniversary_, or _retail_) or its WTF folder."
         panel.prompt = "Install"
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
@@ -427,12 +497,13 @@ final class PadWakeModel: ObservableObject {
 
         if folder.lastPathComponent != "WTF" {
             let nestedWTF = folder.appendingPathComponent("WTF")
-            var isDir: ObjCBool = false
-            if fm.fileExists(atPath: nestedWTF.path, isDirectory: &isDir), isDir.boolValue {
+            if Self.knownFlavorNames[folder.lastPathComponent] != nil
+                || fm.fileExists(atPath: nestedWTF.path) {
                 folder = nestedWTF
             }
         }
 
+        wowState.selectedPath = folder.standardizedFileURL.path
         installWoW(into: folder)
     }
 
@@ -440,12 +511,14 @@ final class PadWakeModel: ObservableObject {
         let fm = FileManager.default
 
         do {
-            var isDir: ObjCBool = false
-            guard fm.fileExists(atPath: folder.path, isDirectory: &isDir), isDir.boolValue else {
-                wowState.lastResult = "Selected target is not an accessible directory."
+            let root = Self.flavorRoot(for: folder)
+            var rootIsDir: ObjCBool = false
+            guard fm.fileExists(atPath: root.path, isDirectory: &rootIsDir), rootIsDir.boolValue else {
+                wowState.lastResult = "Selected WoW folder is not accessible."
                 wowState.lastResultIsError = true
                 return
             }
+            try fm.createDirectory(at: folder, withIntermediateDirectories: true)
 
             guard let dbRes = Bundle.main.url(
                 forResource: "gamecontrollerdb_padwake", withExtension: "txt", subdirectory: "games/sdl2"
@@ -876,10 +949,32 @@ struct WoWReadinessCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
-            HStack {
-                Text("WoW: Forever Readiness")
+            HStack(spacing: 6) {
+                Text(primary?.flavorName ?? "WoW Readiness")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                if model.wowState.targets.count > 1 {
+                    Menu {
+                        ForEach(model.wowState.targets) { target in
+                            Button {
+                                model.wowState.selectedPath = target.path
+                            } label: {
+                                if target.path == primary?.path {
+                                    Label(target.flavorName, systemImage: "checkmark")
+                                } else {
+                                    Text(target.flavorName)
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 8.5, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                }
                 Spacer()
                 if model.status == PW_STATUS_AWAKE && model.disableMFiVeto && (primary?.isConfigured ?? false) {
                     Label("Ready", systemImage: "checkmark.seal.fill")
@@ -915,11 +1010,11 @@ struct WoWReadinessCardView: View {
                     .controlSize(.mini)
             }
 
-            // 3. WoW: Forever files + PadWakeProfiles addon
+            // 3. WoW files + PadWakeProfiles addon (Forever / Classic / Retail)
             ReadinessRowView(
                 icon: (primary?.isConfigured ?? false) ? "checkmark.circle.fill" : "exclamationmark.circle.fill",
                 iconColor: (primary?.isConfigured ?? false) ? .green : .orange,
-                title: "WoW: Forever Setup",
+                title: "\(primary?.flavorName ?? "WoW") Setup",
                 subtitle: primary.map { $0.isConfigured ? "\($0.label) + PadWakeProfiles" : "\($0.label) — needs install" } ?? "Folder not detected yet"
             ) {
                 if let target = primary {
@@ -1092,12 +1187,19 @@ struct PopoverView: View {
                                     Image(systemName: target.isConfigured ? "checkmark.circle.fill" : "folder")
                                         .font(.caption2)
                                         .foregroundStyle(target.isConfigured ? Color.green : Color.secondary)
-                                    Text(target.label)
-                                        .font(.caption2.monospaced())
-                                        .lineLimit(1)
-                                        .truncationMode(.middle)
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        Text(target.flavorName)
+                                            .font(.caption2.weight(.medium))
+                                            .lineLimit(1)
+                                        Text(target.label)
+                                            .font(.system(size: 9.5, design: .monospaced))
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                            .truncationMode(.middle)
+                                    }
                                     Spacer()
                                     Button(target.isConfigured ? "Update" : "Install") {
+                                        model.wowState.selectedPath = target.path
                                         model.installWoW(into: URL(fileURLWithPath: target.path))
                                     }
                                     .buttonStyle(.bordered)
@@ -1105,6 +1207,11 @@ struct PopoverView: View {
                                 }
                             }
                         }
+
+                        Text("Auto-detects Forever, Classic Era, Classic, Anniversary & Retail.")
+                            .font(.system(size: 9.5))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
 
                         HStack {
                             Button {

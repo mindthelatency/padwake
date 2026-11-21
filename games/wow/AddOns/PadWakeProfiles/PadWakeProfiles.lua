@@ -735,6 +735,59 @@ local CLASS_PROFILES = {
             },
         },
     },
+
+    DEATHKNIGHT = {
+        name = "Death Knight",
+        summary = "Classic Melee/Tank (0 deg turn) | GR: Mind Freeze | GL: Death Grip | ZL+GR: Anti-Magic Shell | ZL+GL: Death Strike",
+        cvars = {
+            GamePadFaceMovementMaxAngle = "0",
+            SoftTargetFriend = "0",
+        },
+        paddles = {
+            { "PADPADDLE1", "PW_DK_INT" },
+            { "PADPADDLE2", "PW_DK_GRIP" },
+            { "SHIFT-PADPADDLE1", "PW_DK_AMS" },
+            { "SHIFT-PADPADDLE2", "PW_DK_DS" },
+        },
+        macros = {
+            { name = "PW_DK_INT",  icon = "INV_MISC_QUESTIONMARK", body = "#showtooltip Mind Freeze\n/cast Mind Freeze" },
+            { name = "PW_DK_GRIP", icon = "INV_MISC_QUESTIONMARK", body = "#showtooltip Death Grip\n/cast Death Grip" },
+            { name = "PW_DK_AMS",  icon = "INV_MISC_QUESTIONMARK", body = "#showtooltip Anti-Magic Shell\n/cast Anti-Magic Shell" },
+            { name = "PW_DK_DS",   icon = "INV_MISC_QUESTIONMARK", body = "#showtooltip Death Strike\n/cast Death Strike" },
+        },
+        bars = {
+            base = {
+                [1] = { "Scourge Strike", "Obliterate", "Heart Strike", "Plague Strike", "Blood Strike", "Attack" },
+                [2] = { "Frost Strike", "Death Coil", "Rune Strike" },
+                [3] = { "Howling Blast", "Icy Touch", "Outbreak" },
+                [4] = { "Death Strike", "Festering Strike", "Plague Strike" },
+                [5] = { "Death and Decay", "Pestilence", "Blood Boil" },
+                [6] = { "Chains of Ice", "Strangulate", "Dark Command" },
+                [7] = { "Horn of Winter", "Bone Shield" },
+                [8] = { "Death Grip", "Dark Command" },
+            },
+            shift = {
+                [1] = { "Blood Presence" },
+                [2] = { "Frost Presence" },
+                [3] = { "Unholy Presence" },
+                [4] = { "Icebound Fortitude", "Vampiric Blood" },
+                [5] = { "Anti-Magic Shell" },
+                [6] = { "Pillar of Frost", "Summon Gargoyle", "Dancing Rune Weapon" },
+                [7] = { "Empower Rune Weapon", "Lichborne" },
+                [8] = { "Dark Command", "Strangulate" },
+            },
+            ctrl = {
+                [1] = { "Army of the Dead", "Raise Dead" },
+                [2] = { "Death Pact", "Runetap" },
+                [3] = { "Path of Frost" },
+                [4] = { "Death Gate" },
+                [5] = { "Acherus Deathcharger" },
+                [6] = { "Raise Ally" },
+                [7] = { "item:6948" },
+                [8] = { "Control Undead" },
+            },
+        },
+    },
 }
 
 -- --- Talent-Spec Detection & Spec-Tailored Crossbar Overrides ---
@@ -784,6 +837,11 @@ local CLASS_SPEC_TREES = {
         [1] = { key = "BALANCE",       label = "Balance" },
         [2] = { key = "FERAL",         label = "Feral" },
         [3] = { key = "RESTORATION",   label = "Restoration" },
+    },
+    DEATHKNIGHT = {
+        [1] = { key = "BLOOD",         label = "Blood" },
+        [2] = { key = "FROST",         label = "Frost" },
+        [3] = { key = "UNHOLY",        label = "Unholy" },
     },
 }
 
@@ -954,6 +1012,34 @@ local SPEC_BAR_OVERRIDES = {
                 [2] = { "Dire Bear Form", "Bear Form", "Moonfire" },
                 [3] = { "macro:PW_DRU_HOT", "Rejuvenation", "Regrowth" },
                 [4] = { "Faerie Fire (Feral)", "Faerie Fire", "Entangling Roots" },
+            },
+        },
+    },
+    DEATHKNIGHT = {
+        BLOOD = {
+            base = {
+                [1] = { "Heart Strike", "Blood Strike", "Attack" },
+                [2] = { "Death Strike", "Rune Strike" },
+                [3] = { "Blood Boil", "Death and Decay", "Icy Touch" },
+                [4] = { "Rune Strike", "Death Coil" },
+                [5] = { "Dark Command", "Death Grip" },
+                [6] = { "Bone Shield", "Vampiric Blood" },
+            },
+        },
+        FROST = {
+            base = {
+                [1] = { "Obliterate", "Plague Strike", "Attack" },
+                [2] = { "Frost Strike", "Death Coil" },
+                [3] = { "Howling Blast", "Icy Touch" },
+                [4] = { "Pillar of Frost", "Death Strike" },
+            },
+        },
+        UNHOLY = {
+            base = {
+                [1] = { "Scourge Strike", "Festering Strike", "Plague Strike", "Attack" },
+                [2] = { "Death Coil", "Festering Strike" },
+                [3] = { "Outbreak", "Icy Touch", "Pestilence" },
+                [4] = { "Dark Transformation", "Summon Gargoyle", "Death Strike" },
             },
         },
     },
@@ -1578,6 +1664,22 @@ local function applyMacros(token)
     return created + updated
 end
 
+local function enableClassicActionBars()
+    if isForeverGamepadUI() or isConsolePortLoaded() or InCombatLockdown() then
+        return
+    end
+    -- Show Bottom-Left (ZL/SHIFT), Bottom-Right (ZR/CTRL), and Right (ZL+ZR) bars in WoW Classic
+    if SetActionBarToggles then
+        pcall(SetActionBarToggles, 1, 1, 1, 0)
+    end
+    safeSetCVar("SHOW_MULTI_ACTIONBAR_1", "1")
+    safeSetCVar("SHOW_MULTI_ACTIONBAR_2", "1")
+    safeSetCVar("SHOW_MULTI_ACTIONBAR_3", "1")
+    if MultiActionBar_Update then
+        pcall(MultiActionBar_Update)
+    end
+end
+
 local function applyBindings(token, forceBindings)
     if InCombatLockdown() then
         printMsg("Cannot modify keybindings during combat. Try again after combat.")
@@ -1610,6 +1712,7 @@ local function applyBindings(token, forceBindings)
                 SetBinding(pair[1], pair[2])
             end
         end
+        enableClassicActionBars()
     end
 
     for _, pair in ipairs(profile.paddles) do
@@ -1624,7 +1727,7 @@ local function applyBindings(token, forceBindings)
     if isForeverGamepadUI() and not forceBindings then
         printMsg(string.format("Saved Forever Controller UI rear-paddle bindings (GR/GL/C) for %s.", profile.name))
     else
-        printMsg(string.format("Saved native PAD* + rear-paddle bindings for %s.", profile.name))
+        printMsg(string.format("Saved WoW Classic / native PAD* + rear-paddle bindings for %s.", profile.name))
     end
     return true
 end
@@ -1657,10 +1760,10 @@ local function printHelp()
     local _, playerClass = UnitClass("player")
     local level = UnitLevel("player") or 1
     local uiMode = isConsolePortLoaded() and "ConsolePort"
-        or (isForeverGamepadUI() and "Forever Crossbar UI" or "Desktop UI")
+        or (isForeverGamepadUI() and "Forever Crossbar UI" or "WoW Classic / Native C_GamePad")
     local _, specLabel = playerClass and detectActiveSpec(playerClass) or nil
     local specText = specLabel and (" [" .. specLabel .. "]") or ""
-    printMsg(string.format("WoW: Forever Profiles v1.3.0 | Level %d %s%s | Preset: %s | Mode: %s",
+    printMsg(string.format("WoW Forever & Classic Profiles v1.4.0 | Level %d %s%s | Preset: %s | Mode: %s",
         level, tostring(playerClass or "?"), specText, tostring(ns.selectedPreset or "AUTO"), uiMode))
     printMsg("Commands:")
     printMsg("  /padwake apply [class] [--keep-bars] [--force-bindings]  Full setup: CVars, macros, bindings, DialogueUI Switch & level/spec bars")
@@ -1717,7 +1820,7 @@ local function handleSlash(msg)
 
     local token = resolveClassToken(classArg)
     if not token then
-        printMsg("Unknown class '" .. tostring(classArg) .. "'. Valid: warrior, paladin, hunter, rogue, priest, shaman, mage, warlock, druid.")
+        printMsg("Unknown class '" .. tostring(classArg) .. "'. Valid: warrior, paladin, hunter, rogue, priest, deathknight, shaman, mage, warlock, druid.")
         return
     end
 
