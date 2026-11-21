@@ -39,8 +39,15 @@ const char *pw_button_name(int index);
 // Returns number of controllers initialized.
 int pw_wake_all(uint8_t led_mask);
 
+// Same as pw_wake_all, optionally printing USB device details and ACK packets to stdout.
+int pw_wake_all_verbose(uint8_t led_mask, bool verbose);
+
 // Updates the Player LED mask on all connected target controllers.
 int pw_set_led_all(uint8_t led_mask);
+
+// Synchronously probes HID reports for up to timeout_sec (stopping early at max_reports if > 0).
+// Returns: -1 if no target HID device is connected, 0 if asleep, or >0 report count sampled.
+int pw_probe_reports(double timeout_sec, int max_reports);
 
 // Synchronously probes whether a target controller is disconnected, asleep, or streaming HID.
 pw_status_t pw_probe_status(double timeout_sec);
