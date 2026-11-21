@@ -39,7 +39,7 @@ echo "[release] Building Universal Binary (${APP_NAME} ${VERSION})..."
 UNIVERSAL=1 SKIP_ADHOC_SIGN=1 "$REPO_DIR/scripts/build-app.sh"
 
 echo "[release] Signing with Developer ID + Hardened Runtime..."
-codesign --force --deep --options runtime --timestamp \
+codesign --force --options runtime --timestamp \
     --entitlements "$REPO_DIR/app/PadWake.entitlements" \
     --sign "$DEVELOPER_ID" \
     "$APP_BUNDLE"
@@ -48,9 +48,9 @@ echo "[release] Verifying code signature..."
 codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 
 echo "[release] Packaging drag-to-Applications DMG..."
-rm -rf "$DMG_STAGE" "$DMG_OUT"
+rm -rf "$DMG_STAGE" "$DMG_OUT" "${DMG_OUT}.sha256"
 mkdir -p "$DMG_STAGE"
-cp -R "$APP_BUNDLE" "$DMG_STAGE/"
+ditto "$APP_BUNDLE" "$DMG_STAGE/${APP_NAME}.app"
 ln -s /Applications "$DMG_STAGE/Applications"
 
 hdiutil create -volname "$APP_NAME" \
@@ -70,7 +70,13 @@ if [[ -n "$NOTARY_PROFILE" ]]; then
     xcrun stapler validate "$DMG_OUT"
 
     echo "[release] Checking Gatekeeper assessment..."
-    spctl --assess --type open --context context:primary-signature --verbose "$DMG_OUT" || true
+    spctl --assess --type open --context context:primary-signature --verbose "$DMG_OUT"
+fi
+
+(cd "$BUILD_DIR" && shasum -a 256 "$(basename "$DMG_OUT")" > "$(basename "$DMG_OUT").sha256")
+echo "[release] SHA-256 written to ${DMG_OUT}.sha256"
+
+if [[ -n "$NOTARY_PROFILE" ]]; then
     echo "[release] DONE! Notarized release ready: $DMG_OUT"
 else
     echo "[release] Signed DMG created (NOTARIZATION SKIPPED because NOTARY_PROFILE was unset): $DMG_OUT"

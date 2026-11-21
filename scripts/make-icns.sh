@@ -134,6 +134,7 @@ icns.append(body)
 try icns.write(to: URL(fileURLWithPath: args[2]))
 SWIFT
 
-swiftc -module-cache-path /tmp/swift-module-cache -framework Cocoa -framework ImageIO "$TMP_DIR/gen_icns.swift" -o "$TMP_DIR/gen_icns"
+mkdir -p "$TMP_DIR/module-cache"
+swiftc -module-cache-path "$TMP_DIR/module-cache" -framework Cocoa -framework ImageIO "$TMP_DIR/gen_icns.swift" -o "$TMP_DIR/gen_icns"
 "$TMP_DIR/gen_icns" "$SRC_PNG" "$OUT_ICNS"
 echo "[icon] Built $OUT_ICNS"

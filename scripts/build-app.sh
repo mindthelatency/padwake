@@ -16,8 +16,9 @@ CONTENTS="$APP_BUNDLE/Contents"
 MACOS_DIR="$CONTENTS/MacOS"
 RES_DIR="$CONTENTS/Resources"
 OBJ_DIR="$BUILD_DIR/obj"
+MOD_CACHE="$BUILD_DIR/module-cache"
 
-mkdir -p "$MACOS_DIR" "$RES_DIR" "$OBJ_DIR"
+mkdir -p "$MACOS_DIR" "$RES_DIR" "$OBJ_DIR" "$MOD_CACHE"
 
 compile_arch() {
     local arch="$1"
@@ -27,11 +28,13 @@ compile_arch() {
 
     echo "[build] Compiling C core (${arch})..."
     clang -arch "$arch" -mmacosx-version-min="$MIN_MACOS" \
-        -Wall -Wextra -O2 -std=c11 \
+        -Wall -Wextra -Wformat -Wformat-security \
+        -Werror=implicit-function-declaration -Werror=return-type \
+        -O2 -std=c11 -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fno-common \
         -c "$REPO_DIR/src/padwake_core.c" -o "$core_obj"
 
     echo "[build] Compiling Swift app (${arch})..."
-    swiftc -module-cache-path /tmp/swift-module-cache \
+    swiftc -module-cache-path "$MOD_CACHE" \
         -target "$target" -O -parse-as-library \
         -import-objc-header "$REPO_DIR/src/padwake_core.h" \
         "$REPO_DIR/app/PadWakeApp.swift" "$core_obj" \
@@ -51,10 +54,11 @@ else
     cp "$OBJ_DIR/${APP_NAME}_${HOST_ARCH}" "$MACOS_DIR/$APP_NAME"
 fi
 
-# Bundle Info.plist (substitute custom BUNDLE_ID / VERSION if overridden)
-sed -e "s/com.padwake.app/${BUNDLE_ID}/g" \
-    -e "s/<string>1.0.0<\/string>/<string>${VERSION}<\/string>/g" \
-    "$REPO_DIR/app/Info.plist" > "$CONTENTS/Info.plist"
+# Bundle Info.plist safely via PlistBuddy (no fragile sed substitution)
+cp "$REPO_DIR/app/Info.plist" "$CONTENTS/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" "$CONTENTS/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$CONTENTS/Info.plist"
+plutil -lint "$CONTENTS/Info.plist" >/dev/null
 
 # Build & copy AppIcon.icns
 if [[ -f "$REPO_DIR/assets/logo.png" ]]; then

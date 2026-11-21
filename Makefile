@@ -1,5 +1,7 @@
 CC      := clang
-CFLAGS  := -Wall -Wextra -O2 -std=c11
+CFLAGS  := -Wall -Wextra -Wformat -Wformat-security \
+           -Werror=implicit-function-declaration -Werror=return-type \
+           -O2 -std=c11 -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fno-common
 LDFLAGS := -framework IOKit -framework CoreFoundation
 
 TARGET  := bin/padwake
@@ -26,7 +28,7 @@ open-app: app
 install-app: app
 	-pkill -x PadWake 2>/dev/null || true
 	rm -rf /Applications/PadWake.app
-	cp -R $(APP) /Applications/PadWake.app
+	ditto $(APP) /Applications/PadWake.app
 	@echo "[app] Installed /Applications/PadWake.app"
 	open /Applications/PadWake.app
 

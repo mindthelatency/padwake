@@ -20,7 +20,7 @@ touch "$GCDB"
 while IFS= read -r line; do
     [[ -z "$line" || "$line" == \#* ]] && continue
     guid="${line%%,*}"
-    if grep -q "^${guid}," "$GCDB"; then
+    if awk -v g="${guid}," 'index($0, g) == 1 { found=1; exit } END { exit !found }' "$GCDB"; then
         echo "[wow] SDL2 mapping for $guid already present in $GCDB"
     else
         printf '\n%s\n' "$line" >> "$GCDB"
@@ -28,8 +28,12 @@ while IFS= read -r line; do
     fi
 done < "$REPO_DIR/games/sdl2/gamecontrollerdb_padwake.txt"
 
-# 2. Install GamePadConfig_PadWake.json (Reverse face labels + GL/GR/C paddles)
-cp "$REPO_DIR/games/wow/GamePadConfig_PadWake.json" "$PAD_JSON"
+# 2. Install GamePadConfig_PadWake.json atomically (Reverse face labels + GL/GR/C paddles)
+TMP_JSON="$(mktemp "$WOW_WTF/.GamePadConfig_PadWake.json.XXXXXX")"
+trap 'rm -f "$TMP_JSON"' EXIT
+cp "$REPO_DIR/games/wow/GamePadConfig_PadWake.json" "$TMP_JSON"
+chmod 644 "$TMP_JSON"
+mv -f "$TMP_JSON" "$PAD_JSON"
 echo "[wow] Installed $PAD_JSON"
 
 # 3. Enable GamePadEnable in Config.wtf if not already set
