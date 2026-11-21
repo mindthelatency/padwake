@@ -72,9 +72,10 @@ Then finish setup in 10 seconds:
 Installing the **World of Warcraft** profile from `PadWake.app` (or `./scripts/install-wow-forever.sh [--class <name>]`) installs `gamecontrollerdb.txt`, `GamePadConfig_PadWake.json`, and the lightweight `PadWakeProfiles` companion addon into `Interface/AddOns/PadWakeProfiles/`.
 
 - **All 9 classes included:** Warrior, Paladin, Hunter, Rogue, Priest, Shaman, Mage, Warlock, and Druid — see [games/wow/classes/README.md](games/wow/classes/README.md) for the full button, paddle (`GR`/`GL`/`C`), and macro guide.
+- **Level- & spellbook-aware bars:** Automatically detects your character's level and scans your spellbook to place your best known abilities (at highest trained rank) onto the controller diamond, trigger layers, and Stealth/Stance/Form bonus bars.
 - **Cloud-sync safe:** Uses Blizzard's `SetBinding` / `SaveBindings` / `SetCVar` / `CreateMacro` APIs in-game so `synchronizeBindings` never overwrites your setup.
 - **ConsolePort-aware:** Automatically detects if **ConsolePort** is loaded and preserves ConsolePort's `PAD*` bindings while still applying class CVars and `PW_*` starter macros (pass `/padwake apply --force-bindings` to override).
-- **Commands:** `/padwake apply [class]`, `/padwake cvars`, `/padwake macros`, `/padwake info`, `/padwake reset`.
+- **Commands:** `/padwake apply [class]`, `/padwake bars [--fill]`, `/padwake cvars`, `/padwake macros`, `/padwake slots`, `/padwake info`, `/padwake reset`.
 
 </details>
 

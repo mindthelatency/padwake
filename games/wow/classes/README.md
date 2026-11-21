@@ -43,4 +43,6 @@ Install via **PadWake.app → Game Profiles → World of Warcraft** (or `./scrip
 /padwake apply
 ```
 
-`PadWakeProfiles` automatically detects your logged-in class, applies the optimized `C_GamePad` CVars, saves your `PAD*` bindings via Blizzard's official API (immune to cloud `synchronizeBindings` overwrites), and creates your 4 `PW_*` starter macros. If **ConsolePort** is loaded, it automatically preserves ConsolePort's `PAD*` bindings while still applying class CVars and starter macros.
+`PadWakeProfiles` automatically detects your logged-in class and level, scans your spellbook for the highest trained rank of every ability, applies the optimized `C_GamePad` CVars, saves your `PAD*` bindings via Blizzard's official API (immune to cloud `synchronizeBindings` overwrites), creates your 4 `PW_*` starter macros, and **auto-populates your controller action bars** (including Stealth, Stance, Cat/Bear, and Shadowform bonus bars).
+
+After leveling up or visiting your class trainer, run `/padwake bars` (or `/padwake bars --fill` to only fill empty slots) to upgrade your bars to your newly trained spells. If **ConsolePort** is loaded, it automatically preserves ConsolePort's `PAD*` bindings while still applying class CVars, starter macros, and action bars.
