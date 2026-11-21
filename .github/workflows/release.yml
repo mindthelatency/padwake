@@ -1,0 +1,86 @@
+name: Build macOS Release Binary
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to build and attach binaries to (e.g. v1.3.0)"
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-macos:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    steps:
+      - name: Resolve release tag and version
+        id: meta
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          TAG="${RELEASE_TAG:-$INPUT_TAG}"
+          if [[ -z "$TAG" ]]; then
+            echo "Error: could not determine release tag." >&2
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ steps.meta.outputs.tag }}
+          persist-credentials: false
+
+      - name: Build Universal PadWake.app (arm64 + x86_64)
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          UNIVERSAL: "1"
+        run: |
+          ./scripts/build-app.sh
+          codesign --verify --deep --strict build/PadWake.app
+          ARCHS="$(lipo -archs build/PadWake.app/Contents/MacOS/PadWake)"
+          echo "Built universal architectures: $ARCHS"
+          [[ "$ARCHS" == *"arm64"* && "$ARCHS" == *"x86_64"* ]]
+
+      - name: Package drag-to-Applications DMG and SHA-256
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          DMG_STAGE="build/dmg-stage"
+          DMG_NAME="PadWake-${VERSION}-macOS.dmg"
+          DMG_PATH="build/${DMG_NAME}"
+
+          rm -rf "$DMG_STAGE" "$DMG_PATH" "${DMG_PATH}.sha256"
+          mkdir -p "$DMG_STAGE"
+          ditto build/PadWake.app "$DMG_STAGE/PadWake.app"
+          ln -s /Applications "$DMG_STAGE/Applications"
+
+          hdiutil create -volname "PadWake" \
+            -srcfolder "$DMG_STAGE" \
+            -ov -format UDZO \
+            "$DMG_PATH" >/dev/null
+          rm -rf "$DMG_STAGE"
+
+          (cd build && shasum -a 256 "$DMG_NAME" > "${DMG_NAME}.sha256")
+          ls -lh "$DMG_PATH" "${DMG_PATH}.sha256"
+
+      - name: Upload DMG and checksum to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          DMG_PATH="build/PadWake-${VERSION}-macOS.dmg"
+          gh release upload "$TAG" "$DMG_PATH" "${DMG_PATH}.sha256" --clobber

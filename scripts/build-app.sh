@@ -58,6 +58,7 @@ fi
 cp "$REPO_DIR/app/Info.plist" "$CONTENTS/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" "$CONTENTS/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$CONTENTS/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$CONTENTS/Info.plist"
 plutil -lint "$CONTENTS/Info.plist" >/dev/null
 
 # Build & copy AppIcon.icns

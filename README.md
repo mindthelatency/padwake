@@ -31,13 +31,25 @@ No Homebrew, third-party libraries, or `sudo` required. You only need macOS 13+ 
 
 ## Install
 
+### Download from Releases
+
+Download the latest `PadWake-*-macOS.dmg` from [Releases](https://github.com/mindthelatency/padwake/releases), drag **PadWake** to **Applications**, and open it.
+
+Because releases are not Apple-notarized yet, macOS may block it the first time. Allow it in **System Settings → Privacy & Security → Open Anyway**, or run:
+
+```bash
+xattr -cr /Applications/PadWake.app
+```
+
+### Or build from source
+
 ```bash
 git clone https://github.com/mindthelatency/padwake.git
 cd padwake
 make install-app
 ```
 
-Then:
+### First-time setup
 
 1. Click the gamepad icon in your Mac menu bar and check **Launch at Login**.
 2. Click **Setup** next to your World of Warcraft folder.
