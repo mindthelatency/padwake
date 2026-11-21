@@ -109,28 +109,23 @@
     }
   });
 
-  const SNIPPETS = {
-    dmg: `# After dragging PadWake to Applications, if macOS blocks the first open:\nxattr -cr /Applications/PadWake.app`,
-    wow: `/padwake apply\n\n# After leveling up:\n/padwake bars`,
-    source: `git clone https://github.com/mindthelatency/padwake.git\ncd padwake\nmake install-app`
-  };
-
   const tabBtns = document.querySelectorAll(".tab-btn");
-  const codeEl = document.getElementById("install-code");
+  const panelEls = document.querySelectorAll("[data-panel]");
   const noteEls = document.querySelectorAll(".install-note[data-note]");
   const copyBtn = document.getElementById("copy-btn");
 
   tabBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       const key = btn.dataset.tab;
-      const code = SNIPPETS[key];
-      if (!code) return;
+      if (!key) return;
       tabBtns.forEach((b) => {
         const active = b === btn;
         b.classList.toggle("active", active);
         b.setAttribute("aria-selected", String(active));
       });
-      codeEl.textContent = code;
+      panelEls.forEach((el) => {
+        el.hidden = el.dataset.panel !== key;
+      });
       noteEls.forEach((el) => {
         el.hidden = el.dataset.note !== key;
       });
@@ -140,8 +135,10 @@
 
   if (copyBtn) {
     copyBtn.addEventListener("click", async () => {
+      const activeCode = document.querySelector("[data-panel]:not([hidden]) code");
+      if (!activeCode) return;
       try {
-        await navigator.clipboard.writeText(codeEl.textContent);
+        await navigator.clipboard.writeText(activeCode.textContent);
         copyBtn.textContent = "Copied!";
         setTimeout(() => (copyBtn.textContent = "Copy"), 1500);
       } catch {

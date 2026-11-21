@@ -10,7 +10,7 @@
   <meta property="og:title" content="PadWake for Mac" />
   <meta property="og:description" content="Plug in your Switch 2 Pro Controller over USB-C and play World of Warcraft: Forever on Mac." />
   <meta property="og:image" content="assets/icon.png" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=1.3.0" />
 </head>
 <body>
   <header class="site-header">
@@ -268,8 +268,15 @@
           </div>
 
           <div class="code-panel">
-            <pre><code id="install-code"># After dragging PadWake to Applications, if macOS blocks the first open:
+            <pre data-panel="dmg"><code># After dragging PadWake to Applications, if macOS blocks the first open:
 xattr -cr /Applications/PadWake.app</code></pre>
+            <pre data-panel="wow" hidden><code>/padwake apply
+
+# After leveling up:
+/padwake bars</code></pre>
+            <pre data-panel="source" hidden><code>git clone https://github.com/mindthelatency/padwake.git
+cd padwake
+make install-app</code></pre>
             <button type="button" class="copy-btn" id="copy-btn" aria-label="Copy commands">Copy</button>
           </div>
 
@@ -306,6 +313,6 @@ xattr -cr /Applications/PadWake.app</code></pre>
     </div>
   </footer>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=1.3.0"></script>
 </body>
 </html>
