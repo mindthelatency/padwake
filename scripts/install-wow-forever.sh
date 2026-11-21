@@ -77,6 +77,7 @@ trap 'rm -f "$TMP_JSON"' EXIT
 cp "$REPO_DIR/games/wow/GamePadConfig_PadWake.json" "$TMP_JSON"
 chmod 644 "$TMP_JSON"
 mv -f "$TMP_JSON" "$PAD_JSON"
+rm -f "$WOW_WTF/GamePadConfig_Switch2.json"
 echo "[wow] Installed $PAD_JSON"
 
 # 3. Enable GamePadEnable in Config.wtf if not already set

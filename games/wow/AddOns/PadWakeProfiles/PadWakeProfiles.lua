@@ -177,7 +177,7 @@ local CLASS_PROFILES = {
         },
         macros = {
             { name = "PW_ROG_KICK", icon = "INV_MISC_QUESTIONMARK", body = "#showtooltip Kick\n/startattack\n/cast Kick" },
-            { name = "PW_ROG_STL",  icon = "INV_MISC_QUESTIONMARK", body = "#showtooltip\n/cast [nocombat] !Stealth; Vanish" },
+            { name = "PW_ROG_STL",  icon = "INV_MISC_QUESTIONMARK", body = "#showtooltip\n/cast [combat] Vanish; Stealth" },
             { name = "PW_ROG_SPR",  icon = "INV_MISC_QUESTIONMARK", body = "#showtooltip Sprint\n/cast Sprint" },
             { name = "PW_ROG_SAP",  icon = "INV_MISC_QUESTIONMARK", body = "#showtooltip Sap\n/cleartarget\n/targetenemy\n/cast Sap" },
         },

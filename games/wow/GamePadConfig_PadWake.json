@@ -2,45 +2,48 @@
     "configVersion": 4,
     "configs": [
         {
-            "comment": "USB Pro Gamepad (VID 0x057E = 1406, PID 0x2069 = 8297)",
+            "comment": "USB Pro Gamepad (VID 0x057E = 1406, PID 0x2069 = 8297) — SDL2 canonical SDL_GameController indices",
             "vendorID": 1406,
             "productID": 8297,
             "name": "USB Pro Gamepad",
             "labelStyle": "Reverse",
             "rawButtonMappings": [
-                { "comment": "B (Bottom / South)", "rawIndex": 0,  "button": "PAD1" },
-                { "comment": "A (Right / East)",   "rawIndex": 1,  "button": "PAD2" },
-                { "comment": "Y (Left / West)",    "rawIndex": 2,  "button": "PAD3" },
-                { "comment": "X (Top / North)",    "rawIndex": 3,  "button": "PAD4" },
-                { "comment": "R Shoulder",         "rawIndex": 4,  "button": "PADRSHOULDER" },
-                { "comment": "ZR Trigger",         "rawIndex": 5,  "button": "PADRTRIGGER" },
-                { "comment": "Plus (+)",           "rawIndex": 6,  "button": "PADFORWARD" },
-                { "comment": "Right Stick Click",  "rawIndex": 7,  "button": "PADRSTICK" },
-                { "comment": "D-Pad Down",         "rawIndex": 8,  "button": "PADDDOWN" },
-                { "comment": "D-Pad Right",        "rawIndex": 9,  "button": "PADDRIGHT" },
-                { "comment": "D-Pad Left",         "rawIndex": 10, "button": "PADDLEFT" },
-                { "comment": "D-Pad Up",           "rawIndex": 11, "button": "PADDUP" },
-                { "comment": "L Shoulder",         "rawIndex": 12, "button": "PADLSHOULDER" },
-                { "comment": "ZL Trigger",         "rawIndex": 13, "button": "PADLTRIGGER" },
-                { "comment": "Minus (-)",          "rawIndex": 14, "button": "PADBACK" },
-                { "comment": "Left Stick Click",   "rawIndex": 15, "button": "PADLSTICK" },
-                { "comment": "Home",               "rawIndex": 16, "button": "PADSYSTEM" },
-                { "comment": "Capture",            "rawIndex": 17, "button": "PADSOCIAL" },
-                { "comment": "GR (Right Paddle)",  "rawIndex": 18, "button": "PADPADDLE1" },
-                { "comment": "GL (Left Paddle)",   "rawIndex": 19, "button": "PADPADDLE2" },
-                { "comment": "C Button",           "rawIndex": 20, "button": "PADPADDLE3" }
+                { "comment": "SDL A -> B (South)",              "rawIndex": 0,  "button": "PAD1" },
+                { "comment": "SDL B -> A (East)",               "rawIndex": 1,  "button": "PAD2" },
+                { "comment": "SDL X -> Y (West)",               "rawIndex": 2,  "button": "PAD3" },
+                { "comment": "SDL Y -> X (North)",              "rawIndex": 3,  "button": "PAD4" },
+                { "comment": "SDL Back -> Minus (-)",           "rawIndex": 4,  "button": "PADBACK" },
+                { "comment": "SDL Guide -> Home",               "rawIndex": 5,  "button": "PADSYSTEM" },
+                { "comment": "SDL Start -> Plus (+)",           "rawIndex": 6,  "button": "PADFORWARD" },
+                { "comment": "SDL Left Stick Click (L3)",       "rawIndex": 7,  "button": "PADLSTICK" },
+                { "comment": "SDL Right Stick Click (R3)",      "rawIndex": 8,  "button": "PADRSTICK" },
+                { "comment": "SDL Left Shoulder (L)",           "rawIndex": 9,  "button": "PADLSHOULDER" },
+                { "comment": "SDL Right Shoulder (R)",          "rawIndex": 10, "button": "PADRSHOULDER" },
+                { "comment": "SDL D-Pad Up",                    "rawIndex": 11, "button": "PADDUP" },
+                { "comment": "SDL D-Pad Down",                  "rawIndex": 12, "button": "PADDDOWN" },
+                { "comment": "SDL D-Pad Left",                  "rawIndex": 13, "button": "PADDLEFT" },
+                { "comment": "SDL D-Pad Right",                 "rawIndex": 14, "button": "PADDRIGHT" },
+                { "comment": "SDL Misc1 -> Capture",            "rawIndex": 15, "button": "PADSOCIAL" },
+                { "comment": "SDL Paddle1 -> GR (Right Grip)",  "rawIndex": 16, "button": "PADPADDLE1" },
+                { "comment": "SDL Paddle2 -> GL (Left Grip)",   "rawIndex": 17, "button": "PADPADDLE2" },
+                { "comment": "SDL Paddle3 -> C Button",         "rawIndex": 18, "button": "PADPADDLE3" },
+                { "comment": "SDL Paddle4 (Unused)",            "rawIndex": 19, "button": "PADPADDLE4" }
             ],
             "rawAxisMappings": [
-                { "comment": "Left Stick X",  "rawIndex": 0, "axis": "LStickX" },
-                { "comment": "Left Stick Y",  "rawIndex": 1, "axis": "LStickY" },
-                { "comment": "Right Stick X", "rawIndex": 2, "axis": "RStickX" },
-                { "comment": "Right Stick Y", "rawIndex": 3, "axis": "RStickY" }
+                { "comment": "Left Stick X",       "rawIndex": 0, "axis": "LStickX" },
+                { "comment": "Left Stick Y",       "rawIndex": 1, "axis": "LStickY" },
+                { "comment": "Right Stick X",      "rawIndex": 2, "axis": "RStickX" },
+                { "comment": "Right Stick Y",      "rawIndex": 3, "axis": "RStickY" },
+                { "comment": "Left Trigger (ZL)",  "rawIndex": 4, "axis": "LTrigger" },
+                { "comment": "Right Trigger (ZR)", "rawIndex": 5, "axis": "RTrigger" }
             ],
             "axisConfigs": [
-                { "axis": "LStickX", "deadzone": 0.08 },
-                { "axis": "LStickY", "deadzone": 0.08 },
-                { "axis": "RStickX", "deadzone": 0.08 },
-                { "axis": "RStickY", "deadzone": 0.08 }
+                { "axis": "LStickX",  "shift": 0.0, "scale":  1.0, "deadzone": 0.08 },
+                { "axis": "LStickY",  "shift": 0.0, "scale": -1.0, "deadzone": 0.08 },
+                { "axis": "RStickX",  "shift": 0.0, "scale":  1.0, "deadzone": 0.08 },
+                { "axis": "RStickY",  "shift": 0.0, "scale": -1.0, "deadzone": 0.08 },
+                { "axis": "LTrigger", "shift": 0.0, "scale":  1.0, "deadzone": 0.12, "buttonThreshold": 0.5, "buttonPos": "PADLTRIGGER" },
+                { "axis": "RTrigger", "shift": 0.0, "scale":  1.0, "deadzone": 0.12, "buttonThreshold": 0.5, "buttonPos": "PADRTRIGGER" }
             ]
         }
     ]

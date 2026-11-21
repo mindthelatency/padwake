@@ -525,6 +525,11 @@ final class PadWakeModel: ObservableObject {
                 let jsonDst = folder.appendingPathComponent("GamePadConfig_PadWake.json")
                 let jsonData = try Data(contentsOf: jsonRes)
                 try jsonData.write(to: jsonDst, options: [.atomic])
+                // Remove legacy stale Switch2 config so it cannot alphabetically override PadWake's config
+                let legacyJsonDst = folder.appendingPathComponent("GamePadConfig_Switch2.json")
+                if fm.fileExists(atPath: legacyJsonDst.path) {
+                    try? fm.removeItem(at: legacyJsonDst)
+                }
                 actions.append("GamePadConfig_PadWake.json")
 
                 let cfgDst = folder.appendingPathComponent("Config.wtf")

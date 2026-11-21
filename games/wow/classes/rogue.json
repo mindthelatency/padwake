@@ -66,8 +66,8 @@
     {
       "name": "PW_ROG_STL",
       "icon": "INV_MISC_QUESTIONMARK",
-      "description": "Enters Stealth out of combat (non-toggleable spam-safe) or Vanish in combat",
-      "body": "#showtooltip\n/cast [nocombat] !Stealth; Vanish"
+      "description": "Casts Vanish in combat, or toggles Stealth out of combat",
+      "body": "#showtooltip\n/cast [combat] Vanish; Stealth"
     },
     {
       "name": "PW_ROG_SPR",
