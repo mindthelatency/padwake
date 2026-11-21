@@ -82,7 +82,7 @@ while IFS= read -r line; do
     fi
 done < "$REPO_DIR/games/sdl2/gamecontrollerdb_padwake.txt"
 
-# 2. Install GamePadConfig_PadWake.json atomically (Reverse face labels + GL/GR/C paddles)
+# 2. Install GamePadConfig_PadWake.json atomically (Letters A/B/X/Y labels + GL/GR/C paddles)
 TMP_JSON="$(mktemp "$WOW_WTF/.GamePadConfig_PadWake.json.XXXXXX")"
 trap 'rm -f "$TMP_JSON"' EXIT
 cp "$REPO_DIR/games/wow/GamePadConfig_PadWake.json" "$TMP_JSON"

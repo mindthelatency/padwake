@@ -6,7 +6,7 @@
             "vendorID": 1406,
             "productID": 8297,
             "name": "USB Pro Gamepad",
-            "labelStyle": "Reverse",
+            "labelStyle": "Letters",
             "rawButtonMappings": [
                 { "comment": "SDL A -> Physical A (East)",      "rawIndex": 0,  "button": "PAD1" },
                 { "comment": "SDL B -> Physical B (South)",     "rawIndex": 1,  "button": "PAD2" },
