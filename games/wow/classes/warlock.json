@@ -1,0 +1,86 @@
+{
+  "id": "warlock",
+  "token": "WARLOCK",
+  "name": "Warlock",
+  "specs": ["Demonology", "Affliction", "Destruction"],
+  "playstyle": "DoT & Pet Caster — strong Demonology pet stat scaling, smooth Affliction/Destro mana curves, Firestone/Spellstone QoL",
+  "cvars": {
+    "GamePadEnable": "1",
+    "GamePadEmulateShift": "PADLTRIGGER",
+    "GamePadEmulateCtrl": "PADRTRIGGER",
+    "GamePadEmulateAlt": "NONE",
+    "GamePadEmulateTapWindowMs": "350",
+    "GamePadCursorAutoEnable": "1",
+    "GamePadCursorCentering": "1",
+    "GamePadFaceMovementMaxAngle": "115",
+    "SoftTargetEnemy": "3",
+    "SoftTargetInteract": "3",
+    "SoftTargetFriend": "0"
+  },
+  "paddles": {
+    "PADPADDLE1": { "label": "GR", "binding": "MACRO PW_WLK_FEAR", "role": "Stopcasting Fear (instant CC / kite)" },
+    "PADPADDLE2": { "label": "GL", "binding": "MACRO PW_WLK_PET", "role": "Pet Attack / Follow Toggle" },
+    "SHIFT-PADPADDLE1": { "label": "ZL+GR", "binding": "MACRO PW_WLK_PACT", "role": "Pet Special (Spell Lock / Sacrifice / Seduction)" },
+    "SHIFT-PADPADDLE2": { "label": "ZL+GL", "binding": "MACRO PW_WLK_TAP", "role": "Life Tap / Dark Pact" },
+    "PADPADDLE3": { "label": "C", "binding": "TOGGLEWORLDMAP", "role": "World Map (ZL+C = Bags)" }
+  },
+  "actionBarGuide": {
+    "base_bar1": {
+      "PAD1 (B)": "Primary Filler (Shadow Bolt / Incinerate / Drain Life)",
+      "PAD2 (A)": "Core DoT 1 (Corruption)",
+      "PAD3 (Y)": "Core DoT 2 (Immolate / Siphon Life)",
+      "PAD4 (X)": "Finisher / Burst (Shadowburn / Conflagrate / Drain Soul)",
+      "PADDUP": "Curse of Agony / Curse of Doom",
+      "PADDRIGHT": "Death Coil / Howl of Terror",
+      "PADDDOWN": "Life Tap",
+      "PADDLEFT": "Shoot (Wand)"
+    },
+    "shift_bar2_ZL": {
+      "ZL+PAD1": "Curse of the Elements / Curse of Shadow",
+      "ZL+PAD2": "Curse of Recklessness / Curse of Tongues",
+      "ZL+PAD3": "Rain of Fire / Hellfire",
+      "ZL+PAD4": "Banish / Enslave Demon",
+      "ZL+PADDUP": "Health Funnel",
+      "ZL+PADDRIGHT": "Shadow Ward",
+      "ZL+PADDDOWN": "Use Healthstone",
+      "ZL+PADDLEFT": "Soulstone"
+    },
+    "ctrl_bar3_ZR": {
+      "ZR+PAD1": "Demonic Empowerment / Amplify Curse",
+      "ZR+PAD2": "Fel Domination",
+      "ZR+PAD3": "Demon Armor / Fel Armor",
+      "ZR+PAD4": "Summon Demon Ring (Imp / Voidwalker / Succubus / Felhunter)",
+      "ZR+PADDUP": "Felsteed / Dreadsteed Mount",
+      "ZR+PADDRIGHT": "Create Healthstone / Soulstone",
+      "ZR+PADDDOWN": "Hearthstone",
+      "ZR+PADDLEFT": "Ritual of Summoning"
+    }
+  },
+  "macros": [
+    {
+      "name": "PW_WLK_FEAR",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Cancels current cast and casts Fear immediately",
+      "body": "#showtooltip Fear\n/stopcasting\n/cast Fear"
+    },
+    {
+      "name": "PW_WLK_PET",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Sends Demon pet to attack hostile target, or recalls pet if no enemy is targeted",
+      "body": "#showtooltip\n/petattack [harm,nodead]\n/petfollow [noharm][dead]"
+    },
+    {
+      "name": "PW_WLK_PACT",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Context-aware Demon utility: Spell Lock (Felhunter), Sacrifice (Voidwalker), or Seduction (Succubus)",
+      "body": "#showtooltip\n/cast [pet:Felhunter] Spell Lock; [pet:Voidwalker] Sacrifice; [pet:Succubus] Seduction"
+    },
+    {
+      "name": "PW_WLK_TAP",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Quick mana recovery via Life Tap",
+      "body": "#showtooltip Life Tap\n/cast Life Tap"
+    }
+  ],
+  "consolePortNotes": "Use ConsolePort Utility Rings for demon summons, curses, and Soul/Health/Fire/Spellstones so combat bars stay uncluttered."
+}

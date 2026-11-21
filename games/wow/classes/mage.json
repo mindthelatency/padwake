@@ -1,0 +1,86 @@
+{
+  "id": "mage",
+  "token": "MAGE",
+  "name": "Mage",
+  "specs": ["Frost", "Fire", "Arcane"],
+  "playstyle": "Ranged Caster / AoE Kiter — Frostfire Bolt, Arcane Blast/Ice Lance tuning, Scroll Deciphering utility, strafe-kiting",
+  "cvars": {
+    "GamePadEnable": "1",
+    "GamePadEmulateShift": "PADLTRIGGER",
+    "GamePadEmulateCtrl": "PADRTRIGGER",
+    "GamePadEmulateAlt": "NONE",
+    "GamePadEmulateTapWindowMs": "350",
+    "GamePadCursorAutoEnable": "1",
+    "GamePadCursorCentering": "1",
+    "GamePadFaceMovementMaxAngle": "115",
+    "SoftTargetEnemy": "3",
+    "SoftTargetInteract": "3",
+    "SoftTargetFriend": "0"
+  },
+  "paddles": {
+    "PADPADDLE1": { "label": "GR", "binding": "MACRO PW_MAG_CS", "role": "Stopcasting Counterspell (instant interrupt)" },
+    "PADPADDLE2": { "label": "GL", "binding": "MACRO PW_MAG_BLK", "role": "Stopcasting Blink (instant mobility/stun break)" },
+    "SHIFT-PADPADDLE1": { "label": "ZL+GR", "binding": "MACRO PW_MAG_IB", "role": "Ice Block (press again to cancel)" },
+    "SHIFT-PADPADDLE2": { "label": "ZL+GL", "binding": "MACRO PW_MAG_POLY", "role": "Polymorph (Sheep)" },
+    "PADPADDLE3": { "label": "C", "binding": "TOGGLEWORLDMAP", "role": "World Map (ZL+C = Bags)" }
+  },
+  "actionBarGuide": {
+    "base_bar1": {
+      "PAD1 (B)": "Primary Nuke (Frostbolt / Fireball / Frostfire Bolt / Arcane Blast)",
+      "PAD2 (A)": "Instant Cast (Fire Blast / Ice Lance / Arcane Missiles)",
+      "PAD3 (Y)": "AoE Cone / Burst (Cone of Cold / Blast Wave / Arcane Explosion)",
+      "PAD4 (X)": "Root / Finisher (Frost Nova / Scorch / Pyroblast)",
+      "PADDUP": "Blizzard / Flamestrike",
+      "PADDRIGHT": "Polymorph",
+      "PADDDOWN": "Ice Barrier / Mana Shield",
+      "PADDLEFT": "Remove Lesser Curse"
+    },
+    "shift_bar2_ZL": {
+      "ZL+PAD1": "Frost Nova",
+      "ZL+PAD2": "Ice Block",
+      "ZL+PAD3": "Cold Snap / Presence of Mind",
+      "ZL+PAD4": "Evocation",
+      "ZL+PADDUP": "Arcane Intellect",
+      "ZL+PADDRIGHT": "Frost Armor / Mage Armor",
+      "ZL+PADDDOWN": "Slow Fall",
+      "ZL+PADDLEFT": "Dampen / Amplify Magic"
+    },
+    "ctrl_bar3_ZR": {
+      "ZR+PAD1": "Icy Veins / Combustion / Arcane Power",
+      "ZR+PAD2": "Mana Gem (Conjure / Use)",
+      "ZR+PAD3": "Conjure Water / Drink",
+      "ZR+PAD4": "Conjure Food / Scroll Deciphering",
+      "ZR+PADDUP": "Mount",
+      "ZR+PADDRIGHT": "Teleport / Portal Ring",
+      "ZR+PADDDOWN": "Hearthstone",
+      "ZR+PADDLEFT": "Shoot (Wand)"
+    }
+  },
+  "macros": [
+    {
+      "name": "PW_MAG_CS",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Cancels current spell cast and fires Counterspell immediately",
+      "body": "#showtooltip Counterspell\n/stopcasting\n/cast Counterspell"
+    },
+    {
+      "name": "PW_MAG_BLK",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Cancels current cast and Blinks immediately out of danger or stuns",
+      "body": "#showtooltip Blink\n/stopcasting\n/cast Blink"
+    },
+    {
+      "name": "PW_MAG_IB",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Enters Ice Block (canceling current cast); press again to cancel aura",
+      "body": "#showtooltip Ice Block\n/stopcasting\n/cancelaura Ice Block\n/cast Ice Block"
+    },
+    {
+      "name": "PW_MAG_POLY",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Casts Polymorph on mouseover or current hostile target",
+      "body": "#showtooltip Polymorph\n/cast [@mouseover,harm,nodead][harm,nodead] Polymorph"
+    }
+  ],
+  "consolePortNotes": "GamePadFaceMovementMaxAngle=115 is essential for Frost Nova -> strafe -> Cone of Cold kiting without spinning your camera. Put Teleports/Portals and Conjure spells in a ConsolePort Utility Ring."
+}

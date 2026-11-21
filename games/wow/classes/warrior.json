@@ -1,0 +1,86 @@
+{
+  "id": "warrior",
+  "token": "WARRIOR",
+  "name": "Warrior",
+  "specs": ["Arms", "Fury", "Protection"],
+  "playstyle": "Melee / Tank — normalized Rage, baseline Victory Rush (L20), trainable Tactical Mastery stance-dancing",
+  "cvars": {
+    "GamePadEnable": "1",
+    "GamePadEmulateShift": "PADLTRIGGER",
+    "GamePadEmulateCtrl": "PADRTRIGGER",
+    "GamePadEmulateAlt": "NONE",
+    "GamePadEmulateTapWindowMs": "350",
+    "GamePadCursorAutoEnable": "1",
+    "GamePadCursorCentering": "1",
+    "GamePadFaceMovementMaxAngle": "0",
+    "SoftTargetEnemy": "3",
+    "SoftTargetInteract": "3",
+    "SoftTargetFriend": "0"
+  },
+  "paddles": {
+    "PADPADDLE1": { "label": "GR", "binding": "MACRO PW_WAR_INT", "role": "Interrupt (Pummel / Shield Bash)" },
+    "PADPADDLE2": { "label": "GL", "binding": "MACRO PW_WAR_CHG", "role": "Gap Closer (Charge / Intercept)" },
+    "SHIFT-PADPADDLE1": { "label": "ZL+GR", "binding": "MACRO PW_WAR_VR", "role": "Victory Rush / Execute finisher" },
+    "SHIFT-PADPADDLE2": { "label": "ZL+GL", "binding": "MACRO PW_WAR_STN", "role": "Stance Toggle (Battle <-> Berserker / Defensive)" },
+    "PADPADDLE3": { "label": "C", "binding": "TOGGLEWORLDMAP", "role": "World Map (ZL+C = Bags)" }
+  },
+  "actionBarGuide": {
+    "base_bar1": {
+      "PAD1 (B)": "Primary Rage Generator / Strike (Mortal Strike / Bloodthirst / Shield Slam)",
+      "PAD2 (A)": "Rage Dump / Filler (Heroic Strike / Slam / Revenge)",
+      "PAD3 (Y)": "AoE / Utility Strike (Whirlwind / Cleave / Thunder Clap)",
+      "PAD4 (X)": "Proc / Finisher (Overpower / Execute / Victory Rush)",
+      "PADDUP": "Rend / Sunder Armor / Devastate",
+      "PADDRIGHT": "Hamstring / Piercing Howl",
+      "PADDDOWN": "Battle Shout / Commanding Shout",
+      "PADDLEFT": "Taunt / Mocking Blow"
+    },
+    "shift_bar2_ZL": {
+      "ZL+PAD1": "Battle Stance",
+      "ZL+PAD2": "Defensive Stance",
+      "ZL+PAD3": "Berserker Stance",
+      "ZL+PAD4": "Berserker Rage (cleanses snares/fears)",
+      "ZL+PADDUP": "Bloodrage",
+      "ZL+PADDRIGHT": "Disarm / Demoralizing Shout",
+      "ZL+PADDDOWN": "Shield Block / Sweeping Strikes",
+      "ZL+PADDLEFT": "Intimidating Shout"
+    },
+    "ctrl_bar3_ZR": {
+      "ZR+PAD1": "Shield Wall / Retaliation / Recklessness",
+      "ZR+PAD2": "Last Stand / Death Wish",
+      "ZR+PAD3": "Health Potion / Bandage",
+      "ZR+PAD4": "Ranged Pull (Shoot / Throw)",
+      "ZR+PADDUP": "Mount",
+      "ZR+PADDRIGHT": "Food",
+      "ZR+PADDDOWN": "Hearthstone",
+      "ZR+PADDLEFT": "Challenging Shout"
+    }
+  },
+  "macros": [
+    {
+      "name": "PW_WAR_INT",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Interrupts using Shield Bash with a shield equipped, or Pummel in Berserker/Battle Stance",
+      "body": "#showtooltip\n/cast [equipped:Shields] Shield Bash; Pummel"
+    },
+    {
+      "name": "PW_WAR_CHG",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Charge out of combat, Intercept in combat, starts auto-attack",
+      "body": "#showtooltip\n/startattack\n/cast [nocombat] Charge; Intercept"
+    },
+    {
+      "name": "PW_WAR_VR",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Triggers baseline Victory Rush when available, otherwise Execute",
+      "body": "#showtooltip\n/startattack\n/cast Victory Rush\n/cast Execute"
+    },
+    {
+      "name": "PW_WAR_STN",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Quick stance cycle between Battle Stance and Berserker Stance (hold Alt for Defensive)",
+      "body": "#showtooltip\n/cast [stance:1] Berserker Stance; Battle Stance"
+    }
+  ],
+  "consolePortNotes": "Enable stance bar paging on Action Bar 1 so Battle, Defensive, and Berserker share identical face-button positions for core attacks. Keep GR/GL bound to PW_WAR_INT and PW_WAR_CHG."
+}

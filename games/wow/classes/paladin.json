@@ -1,0 +1,86 @@
+{
+  "id": "paladin",
+  "token": "PALADIN",
+  "name": "Paladin",
+  "specs": ["Retribution", "Protection", "Holy"],
+  "playstyle": "Hybrid Melee / Tank / Healer — Seal Twisting & Shockadin Ret, Prot Taunt, active Holy AoE/reactive healing",
+  "cvars": {
+    "GamePadEnable": "1",
+    "GamePadEmulateShift": "PADLTRIGGER",
+    "GamePadEmulateCtrl": "PADRTRIGGER",
+    "GamePadEmulateAlt": "NONE",
+    "GamePadEmulateTapWindowMs": "350",
+    "GamePadCursorAutoEnable": "1",
+    "GamePadCursorCentering": "1",
+    "GamePadFaceMovementMaxAngle": "0",
+    "SoftTargetEnemy": "3",
+    "SoftTargetInteract": "3",
+    "SoftTargetFriend": "1"
+  },
+  "paddles": {
+    "PADPADDLE1": { "label": "GR", "binding": "MACRO PW_PAL_STUN", "role": "Hammer of Justice / Stopcast Interrupt" },
+    "PADPADDLE2": { "label": "GL", "binding": "MACRO PW_PAL_CLN", "role": "Smart Cleanse / Purify (Mouseover -> Target -> Self)" },
+    "SHIFT-PADPADDLE1": { "label": "ZL+GR", "binding": "MACRO PW_PAL_HEAL", "role": "Smart Flash of Light (Mouseover -> Target -> Self)" },
+    "SHIFT-PADPADDLE2": { "label": "ZL+GL", "binding": "MACRO PW_PAL_BUB", "role": "Emergency Divine Shield / Blessing of Protection" },
+    "PADPADDLE3": { "label": "C", "binding": "TOGGLEWORLDMAP", "role": "World Map (ZL+C = Bags)" }
+  },
+  "actionBarGuide": {
+    "base_bar1": {
+      "PAD1 (B)": "Judgement (primary trigger / Shockadin Holy Shock)",
+      "PAD2 (A)": "Primary Seal (Seal of Command / Seal of Righteousness)",
+      "PAD3 (Y)": "Consecration / AoE Threat & Damage",
+      "PAD4 (X)": "Exorcism / Hammer of Wrath / Holy Shock",
+      "PADDUP": "Secondary Seal (for Seal Twisting)",
+      "PADDRIGHT": "Protection Taunt / Holy Shield",
+      "PADDDOWN": "Flash of Light (Smart Heal macro)",
+      "PADDLEFT": "Holy Light (Smart Heal macro)"
+    },
+    "shift_bar2_ZL": {
+      "ZL+PAD1": "Blessing of Freedom",
+      "ZL+PAD2": "Blessing of Protection",
+      "ZL+PAD3": "Blessing of Sacrifice",
+      "ZL+PAD4": "Divine Favor / Avenging Wrath",
+      "ZL+PADDUP": "Target Party 1 (Holy healing)",
+      "ZL+PADDRIGHT": "Target Party 2 (Holy healing)",
+      "ZL+PADDDOWN": "Target Party 3 (Holy healing)",
+      "ZL+PADDLEFT": "Target Party 4 (Holy healing)"
+    },
+    "ctrl_bar3_ZR": {
+      "ZR+PAD1": "Lay on Hands",
+      "ZR+PAD2": "Divine Shield",
+      "ZR+PAD3": "Blessing of Kings / Might / Wisdom",
+      "ZR+PAD4": "Aura Swap (Devotion / Retribution / Concentration)",
+      "ZR+PADDUP": "Warhorse / Charger Mount",
+      "ZR+PADDRIGHT": "Righteous Fury (Tank toggle)",
+      "ZR+PADDDOWN": "Redemption (Resurrect)",
+      "ZR+PADDLEFT": "Drink / Mana Potion"
+    }
+  },
+  "macros": [
+    {
+      "name": "PW_PAL_STUN",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Cancels current cast if needed and stuns target with Hammer of Justice",
+      "body": "#showtooltip Hammer of Justice\n/stopcasting\n/cast Hammer of Justice"
+    },
+    {
+      "name": "PW_PAL_CLN",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Smart Cleanse on mouseover, friendly target, or yourself",
+      "body": "#showtooltip Cleanse\n/cast [@mouseover,help,nodead][help,nodead][@player] Cleanse"
+    },
+    {
+      "name": "PW_PAL_HEAL",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Smart Flash of Light on mouseover, friendly target, or yourself",
+      "body": "#showtooltip Flash of Light\n/cast [@mouseover,help,nodead][help,nodead][@player] Flash of Light"
+    },
+    {
+      "name": "PW_PAL_BUB",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Instant Divine Shield emergency button (cancels current cast)",
+      "body": "#showtooltip Divine Shield\n/stopcasting\n/cast Divine Shield"
+    }
+  ],
+  "consolePortNotes": "For Holy Paladins, enable ConsolePort Raid/Target Unit Frames on D-Pad. Keep SoftTargetFriend=1 so friendly players highlight cleanly when facing them."
+}

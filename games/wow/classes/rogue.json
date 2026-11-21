@@ -1,0 +1,86 @@
+{
+  "id": "rogue",
+  "token": "ROGUE",
+  "name": "Rogue",
+  "specs": ["Assassination", "Combat", "Subtlety"],
+  "playstyle": "Melee Combo-Point DPS — lower energy friction, Stealth action-bar mirroring, poison-focused Assassination & Axe support",
+  "cvars": {
+    "GamePadEnable": "1",
+    "GamePadEmulateShift": "PADLTRIGGER",
+    "GamePadEmulateCtrl": "PADRTRIGGER",
+    "GamePadEmulateAlt": "NONE",
+    "GamePadEmulateTapWindowMs": "350",
+    "GamePadCursorAutoEnable": "1",
+    "GamePadCursorCentering": "1",
+    "GamePadFaceMovementMaxAngle": "0",
+    "SoftTargetEnemy": "3",
+    "SoftTargetInteract": "3",
+    "SoftTargetFriend": "0"
+  },
+  "paddles": {
+    "PADPADDLE1": { "label": "GR", "binding": "MACRO PW_ROG_KICK", "role": "Kick (instant interrupt)" },
+    "PADPADDLE2": { "label": "GL", "binding": "MACRO PW_ROG_STL", "role": "Stealth / Vanish (context-aware)" },
+    "SHIFT-PADPADDLE1": { "label": "ZL+GR", "binding": "MACRO PW_ROG_SPR", "role": "Sprint / Evasion Mobility & Survival" },
+    "SHIFT-PADPADDLE2": { "label": "ZL+GL", "binding": "MACRO PW_ROG_SAP", "role": "Target-Nearest Sap (Stealth opener)" },
+    "PADPADDLE3": { "label": "C", "binding": "TOGGLEWORLDMAP", "role": "World Map (ZL+C = Bags)" }
+  },
+  "actionBarGuide": {
+    "base_bar1": {
+      "PAD1 (B)": "Combo Builder (Sinister Strike / Backstab / Mutilate) — Stealth: Cheap Shot",
+      "PAD2 (A)": "Primary Finisher (Eviscerate / Envenom) — Stealth: Ambush",
+      "PAD3 (Y)": "Secondary Finisher (Slice and Dice / Rupture) — Stealth: Garrote",
+      "PAD4 (X)": "Control Finisher (Kidney Shot / Gouge) — Stealth: Pick Pocket + Sap",
+      "PADDUP": "Feint / Riposte / Hemorrhage",
+      "PADDRIGHT": "Blind",
+      "PADDDOWN": "Blade Flurry / Cold Blood",
+      "PADDLEFT": "Distract / Expose Armor"
+    },
+    "shift_bar2_ZL": {
+      "ZL+PAD1": "Evasion",
+      "ZL+PAD2": "Sprint",
+      "ZL+PAD3": "Vanish",
+      "ZL+PAD4": "Preparation / Adrenaline Rush",
+      "ZL+PADDUP": "Gouge",
+      "ZL+PADDRIGHT": "Rupture",
+      "ZL+PADDDOWN": "Crimson Vial / Health Potion / Bandage",
+      "ZL+PADDLEFT": "Throw / Shoot"
+    },
+    "ctrl_bar3_ZR": {
+      "ZR+PAD1": "Adrenaline Rush / Shadowstep",
+      "ZR+PAD2": "Blade Flurry / Cold Blood",
+      "ZR+PAD3": "Thistle Tea",
+      "ZR+PAD4": "Poisons / Lockpicking",
+      "ZR+PADDUP": "Mount",
+      "ZR+PADDRIGHT": "Food",
+      "ZR+PADDDOWN": "Hearthstone",
+      "ZR+PADDLEFT": "Safe Fall / Pick Lock"
+    }
+  },
+  "macros": [
+    {
+      "name": "PW_ROG_KICK",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Instant Kick interrupt without breaking auto-attack flow",
+      "body": "#showtooltip Kick\n/startattack\n/cast Kick"
+    },
+    {
+      "name": "PW_ROG_STL",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Enters Stealth out of combat (non-toggleable spam-safe) or Vanish in combat",
+      "body": "#showtooltip\n/cast [nocombat] !Stealth; Vanish"
+    },
+    {
+      "name": "PW_ROG_SPR",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Sprint out of stealth or Evasion when taking heavy melee damage",
+      "body": "#showtooltip Sprint\n/cast Sprint"
+    },
+    {
+      "name": "PW_ROG_SAP",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Clears target, grabs nearest enemy, and casts Sap immediately",
+      "body": "#showtooltip Sap\n/cleartarget\n/targetenemy\n/cast Sap"
+    }
+  ],
+  "consolePortNotes": "Mirror your Stealth Bar face buttons directly onto your primary Builder/Finisher slots (B=Cheap Shot, A=Ambush, Y=Garrote) so entering/exiting Stealth preserves muscle memory."
+}

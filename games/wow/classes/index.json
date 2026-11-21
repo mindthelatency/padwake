@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "game": "World of Warcraft: Forever",
+  "clientFlavor": "_forever_",
+  "controller": {
+    "vid": "0x057E",
+    "pid": "0x2069",
+    "name": "USB Pro Gamepad",
+    "modifiers": {
+      "shift": "PADLTRIGGER",
+      "ctrl": "PADRTRIGGER",
+      "alt": "NONE"
+    },
+    "paddles": {
+      "PADPADDLE1": "GR (Right Rear Paddle) — Interrupt / Instant Panic",
+      "PADPADDLE2": "GL (Left Rear Paddle) — Mobility / Stance / Pet / Form",
+      "PADPADDLE3": "C Button — World Map / Bags / Character"
+    }
+  },
+  "classes": [
+    {
+      "id": "warrior",
+      "token": "WARRIOR",
+      "name": "Warrior",
+      "specs": ["Arms", "Fury", "Protection"],
+      "summary": "Stance-bar paging, Victory Rush, GR Pummel/Shield Bash, GL Charge/Intercept",
+      "file": "warrior.json"
+    },
+    {
+      "id": "paladin",
+      "token": "PALADIN",
+      "name": "Paladin",
+      "specs": ["Retribution", "Protection", "Holy"],
+      "summary": "Seal/Judgement & Shockadin layers, Prot Taunt, Holy smart-heal macros, GR HoJ",
+      "file": "paladin.json"
+    },
+    {
+      "id": "hunter",
+      "token": "HUNTER",
+      "name": "Hunter",
+      "specs": ["Marksmanship", "Survival (Melee)", "Beast Mastery"],
+      "summary": "Baseline Aimed Shot, in-combat traps, kiting strafe angle, GL Pet Attack/Follow",
+      "file": "hunter.json"
+    },
+    {
+      "id": "rogue",
+      "token": "ROGUE",
+      "name": "Rogue",
+      "specs": ["Assassination", "Combat", "Subtlety"],
+      "summary": "Mirrored Stealth/Builder face buttons, Finisher SHIFT layer, GR Kick, GL Sprint/Vanish",
+      "file": "rogue.json"
+    },
+    {
+      "id": "priest",
+      "token": "PRIEST",
+      "name": "Priest",
+      "specs": ["Discipline", "Holy", "Shadow"],
+      "summary": "Friendly soft-target healing, Penance/Fear Ward/Devouring Plague, GR Psychic Scream",
+      "file": "priest.json"
+    },
+    {
+      "id": "shaman",
+      "token": "SHAMAN",
+      "name": "Shaman",
+      "specs": ["Enhancement", "Elemental", "Restoration"],
+      "summary": "Maelstrom/Lava Burst/Riptide layers, totem macros, GR Earth Shock, GL Indoor Ghost Wolf",
+      "file": "shaman.json"
+    },
+    {
+      "id": "mage",
+      "token": "MAGE",
+      "name": "Mage",
+      "specs": ["Frost", "Fire", "Arcane"],
+      "summary": "Frostfire Bolt & kiting strafe angle, GR stopcasting Counterspell, GL Blink",
+      "file": "mage.json"
+    },
+    {
+      "id": "warlock",
+      "token": "WARLOCK",
+      "name": "Warlock",
+      "specs": ["Demonology", "Affliction", "Destruction"],
+      "summary": "DoT SHIFT layer, pet scaling & Demonology control, GR Fear, GL Pet Attack/Recall",
+      "file": "warlock.json"
+    },
+    {
+      "id": "druid",
+      "token": "DRUID",
+      "name": "Druid",
+      "specs": ["Feral (Cat/Bear)", "Balance", "Restoration"],
+      "summary": "Fluid shapeshift macros, Lacerate/Cat-Bear mirroring, GR Bash, GL Travel/Cat Shift",
+      "file": "druid.json"
+    }
+  ]
+}

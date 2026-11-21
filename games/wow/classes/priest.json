@@ -1,0 +1,86 @@
+{
+  "id": "priest",
+  "token": "PRIEST",
+  "name": "Priest",
+  "specs": ["Discipline", "Holy", "Shadow"],
+  "playstyle": "Healer / Shadow Caster — standardized Fear Ward & Devouring Plague, Penance, Wand Spec, friendly soft-targeting",
+  "cvars": {
+    "GamePadEnable": "1",
+    "GamePadEmulateShift": "PADLTRIGGER",
+    "GamePadEmulateCtrl": "PADRTRIGGER",
+    "GamePadEmulateAlt": "NONE",
+    "GamePadEmulateTapWindowMs": "350",
+    "GamePadCursorAutoEnable": "1",
+    "GamePadCursorCentering": "1",
+    "GamePadFaceMovementMaxAngle": "115",
+    "SoftTargetEnemy": "3",
+    "SoftTargetInteract": "3",
+    "SoftTargetFriend": "3"
+  },
+  "paddles": {
+    "PADPADDLE1": { "label": "GR", "binding": "MACRO PW_PRI_FEAR", "role": "Psychic Scream (instant panic CC)" },
+    "PADPADDLE2": { "label": "GL", "binding": "MACRO PW_PRI_SHLD", "role": "Smart Power Word: Shield (Mouseover -> Target -> Self)" },
+    "SHIFT-PADPADDLE1": { "label": "ZL+GR", "binding": "MACRO PW_PRI_DISP", "role": "Smart Dispel Magic (Friendly or Offensive)" },
+    "SHIFT-PADPADDLE2": { "label": "ZL+GL", "binding": "MACRO PW_PRI_HEAL", "role": "Smart Flash Heal / Penance (Mouseover -> Target -> Self)" },
+    "PADPADDLE3": { "label": "C", "binding": "TOGGLEWORLDMAP", "role": "World Map (ZL+C = Bags)" }
+  },
+  "actionBarGuide": {
+    "base_bar1": {
+      "PAD1 (B)": "Flash Heal / Mind Flay (Shadow)",
+      "PAD2 (A)": "Penance / Mind Blast (Shadow)",
+      "PAD3 (Y)": "Renew / Shadow Word: Pain (Shadow)",
+      "PAD4 (X)": "Power Word: Shield / Smite",
+      "PADDUP": "Greater Heal / Devouring Plague",
+      "PADDRIGHT": "Dispel Magic / Silence",
+      "PADDDOWN": "Shoot (Wand) — spam-safe macro",
+      "PADDLEFT": "Fade / Shadowform"
+    },
+    "shift_bar2_ZL": {
+      "ZL+PAD1": "Prayer of Healing / Holy Nova",
+      "ZL+PAD2": "Abolish Disease / Cure Disease",
+      "ZL+PAD3": "Fear Ward (standardized across races in Forever)",
+      "ZL+PAD4": "Mind Control / Shackle Undead",
+      "ZL+PADDUP": "Target Party 1",
+      "ZL+PADDRIGHT": "Target Party 2",
+      "ZL+PADDDOWN": "Target Party 3",
+      "ZL+PADDLEFT": "Target Party 4"
+    },
+    "ctrl_bar3_ZR": {
+      "ZR+PAD1": "Inner Focus / Power Infusion",
+      "ZR+PAD2": "Desperate Prayer / Vampiric Embrace",
+      "ZR+PAD3": "Power Word: Fortitude / Divine Spirit",
+      "ZR+PAD4": "Inner Fire / Shadow Protection",
+      "ZR+PADDUP": "Mount",
+      "ZR+PADDRIGHT": "Drink / Mana Potion",
+      "ZR+PADDDOWN": "Resurrection",
+      "ZR+PADDLEFT": "Hearthstone"
+    }
+  },
+  "macros": [
+    {
+      "name": "PW_PRI_FEAR",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Cancels current cast and triggers Psychic Scream immediately",
+      "body": "#showtooltip Psychic Scream\n/stopcasting\n/cast Psychic Scream"
+    },
+    {
+      "name": "PW_PRI_SHLD",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Smart Power Word: Shield on mouseover, friendly target, or yourself",
+      "body": "#showtooltip Power Word: Shield\n/cast [@mouseover,help,nodead][help,nodead][@player] Power Word: Shield"
+    },
+    {
+      "name": "PW_PRI_DISP",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Smart Dispel Magic on mouseover, target (friendly or hostile), or yourself",
+      "body": "#showtooltip Dispel Magic\n/cast [@mouseover,exists,nodead][exists,nodead][@player] Dispel Magic"
+    },
+    {
+      "name": "PW_PRI_HEAL",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Smart Flash Heal on mouseover, friendly target, or yourself",
+      "body": "#showtooltip Flash Heal\n/cast [@mouseover,help,nodead][help,nodead][@player] Flash Heal"
+    }
+  ],
+  "consolePortNotes": "SoftTargetFriend=3 makes healing effortless without a mouse; pair with ConsolePort Raid Cursor / Target Unit Frames for 10/20-player Forever raids. Use ZL+D-Pad for instant 5-man party cycling."
+}

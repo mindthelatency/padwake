@@ -1,0 +1,86 @@
+{
+  "id": "shaman",
+  "token": "SHAMAN",
+  "name": "Shaman",
+  "specs": ["Enhancement", "Elemental", "Restoration"],
+  "playstyle": "Hybrid Melee / Caster / Healer — Maelstrom Weapon (Enh), Lava Burst & Overload (Ele), Riptide & Water Shield (Resto), indoor Ghost Wolf",
+  "cvars": {
+    "GamePadEnable": "1",
+    "GamePadEmulateShift": "PADLTRIGGER",
+    "GamePadEmulateCtrl": "PADRTRIGGER",
+    "GamePadEmulateAlt": "NONE",
+    "GamePadEmulateTapWindowMs": "350",
+    "GamePadCursorAutoEnable": "1",
+    "GamePadCursorCentering": "1",
+    "GamePadFaceMovementMaxAngle": "0",
+    "SoftTargetEnemy": "3",
+    "SoftTargetInteract": "3",
+    "SoftTargetFriend": "1"
+  },
+  "paddles": {
+    "PADPADDLE1": { "label": "GR", "binding": "MACRO PW_SHM_INT", "role": "Stopcasting Earth Shock (instant interrupt)" },
+    "PADPADDLE2": { "label": "GL", "binding": "MACRO PW_SHM_WLF", "role": "Indoor Ghost Wolf (toggle mobility)" },
+    "SHIFT-PADPADDLE1": { "label": "ZL+GR", "binding": "MACRO PW_SHM_HEAL", "role": "Smart Riptide / Lesser Healing Wave" },
+    "SHIFT-PADPADDLE2": { "label": "ZL+GL", "binding": "MACRO PW_SHM_TOT", "role": "Totem Set Drop (castsequence)" },
+    "PADPADDLE3": { "label": "C", "binding": "TOGGLEWORLDMAP", "role": "World Map (ZL+C = Bags)" }
+  },
+  "actionBarGuide": {
+    "base_bar1": {
+      "PAD1 (B)": "Lightning Bolt (instant w/ Maelstrom) / Stormstrike / Healing Wave",
+      "PAD2 (A)": "Lava Burst / Earth Shock / Riptide",
+      "PAD3 (Y)": "Flame Shock / Chain Lightning / Chain Heal",
+      "PAD4 (X)": "Frost Shock / Purge / Lesser Healing Wave",
+      "PADDUP": "Earthbind Totem (roots in Ele) / Tremor Totem",
+      "PADDRIGHT": "Grounding Totem",
+      "PADDDOWN": "Healing Stream / Mana Spring Totem",
+      "PADDLEFT": "Windfury / Grace of Air Totem"
+    },
+    "shift_bar2_ZL": {
+      "ZL+PAD1": "Strength of Earth / Stoneskin Totem",
+      "ZL+PAD2": "Searing / Fire Nova / Magma Totem",
+      "ZL+PAD3": "Cure Poison / Cure Disease",
+      "ZL+PAD4": "Water Shield / Lightning Shield",
+      "ZL+PADDUP": "Target Party 1 (Resto)",
+      "ZL+PADDRIGHT": "Target Party 2 (Resto)",
+      "ZL+PADDDOWN": "Target Party 3 (Resto)",
+      "ZL+PADDLEFT": "Target Party 4 (Resto)"
+    },
+    "ctrl_bar3_ZR": {
+      "ZR+PAD1": "Elemental Mastery / Nature's Swiftness",
+      "ZR+PAD2": "Mana Tide Totem / Shamanistic Rage",
+      "ZR+PAD3": "Weapon Imbue (Windfury / Rockbiter / Flametongue)",
+      "ZR+PAD4": "Astral Recall / Reincarnation",
+      "ZR+PADDUP": "Mount",
+      "ZR+PADDRIGHT": "Drink / Mana Potion",
+      "ZR+PADDDOWN": "Ancestral Spirit (Resurrect)",
+      "ZR+PADDLEFT": "Totemic Recall"
+    }
+  },
+  "macros": [
+    {
+      "name": "PW_SHM_INT",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Cancels current cast and interrupts immediately with Earth Shock",
+      "body": "#showtooltip Earth Shock\n/stopcasting\n/cast Earth Shock"
+    },
+    {
+      "name": "PW_SHM_WLF",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Toggles Ghost Wolf cleanly (usable indoors in WoW Forever)",
+      "body": "#showtooltip Ghost Wolf\n/cast Ghost Wolf"
+    },
+    {
+      "name": "PW_SHM_HEAL",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Smart Lesser Healing Wave on mouseover, friendly target, or yourself",
+      "body": "#showtooltip Lesser Healing Wave\n/cast [@mouseover,help,nodead][help,nodead][@player] Lesser Healing Wave"
+    },
+    {
+      "name": "PW_SHM_TOT",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "One-button cycling totem drop sequence (resets after 6s or combat change)",
+      "body": "#showtooltip\n/castsequence reset=6 Strength of Earth Totem, Windfury Totem, Mana Spring Totem, Searing Totem"
+    }
+  ],
+  "consolePortNotes": "Group situational totems (Tremor, Poison Cleansing, Resistance) into a ConsolePort Utility Ring. Elemental/Resto Shamans can raise GamePadFaceMovementMaxAngle to 115 if preferred."
+}

@@ -1,0 +1,86 @@
+{
+  "id": "hunter",
+  "token": "HUNTER",
+  "name": "Hunter",
+  "specs": ["Marksmanship", "Survival (Melee)", "Beast Mastery"],
+  "playstyle": "Ranged Kiter / Melee Survival — baseline Aimed Shot (L20), in-combat Traps, Lone Wolf option, pet scaling",
+  "cvars": {
+    "GamePadEnable": "1",
+    "GamePadEmulateShift": "PADLTRIGGER",
+    "GamePadEmulateCtrl": "PADRTRIGGER",
+    "GamePadEmulateAlt": "NONE",
+    "GamePadEmulateTapWindowMs": "350",
+    "GamePadCursorAutoEnable": "1",
+    "GamePadCursorCentering": "1",
+    "GamePadFaceMovementMaxAngle": "115",
+    "SoftTargetEnemy": "3",
+    "SoftTargetInteract": "3",
+    "SoftTargetFriend": "0"
+  },
+  "paddles": {
+    "PADPADDLE1": { "label": "GR", "binding": "MACRO PW_HNT_FD", "role": "Feign Death (stopcast + passive pet)" },
+    "PADPADDLE2": { "label": "GL", "binding": "MACRO PW_HNT_PET", "role": "Pet Attack / Follow Toggle (no-op for Lone Wolf)" },
+    "SHIFT-PADPADDLE1": { "label": "ZL+GR", "binding": "MACRO PW_HNT_TRAP", "role": "In-Combat Freezing Trap" },
+    "SHIFT-PADPADDLE2": { "label": "ZL+GL", "binding": "MACRO PW_HNT_MARK", "role": "Hunter's Mark + Auto Shot / Pet Attack" },
+    "PADPADDLE3": { "label": "C", "binding": "TOGGLEWORLDMAP", "role": "World Map (ZL+C = Bags)" }
+  },
+  "actionBarGuide": {
+    "base_bar1": {
+      "PAD1 (B)": "Auto Shot / Primary Strike (Raptor Strike for Melee Survival)",
+      "PAD2 (A)": "Aimed Shot (baseline L20) / Mongoose Bite",
+      "PAD3 (Y)": "Multi-Shot / Arcane Shot",
+      "PAD4 (X)": "Serpent Sting / Scatter Shot",
+      "PADDUP": "Concussive Shot / Wing Clip",
+      "PADDRIGHT": "Hunter's Mark",
+      "PADDDOWN": "Disengage / Deterrence",
+      "PADDLEFT": "Tranquilizing Shot / Flare"
+    },
+    "shift_bar2_ZL": {
+      "ZL+PAD1": "Freezing Trap (usable in combat in Forever)",
+      "ZL+PAD2": "Frost Trap",
+      "ZL+PAD3": "Immolation Trap / Explosive Trap",
+      "ZL+PAD4": "Volley / Distracting Shot",
+      "ZL+PADDUP": "Aspect of the Hawk",
+      "ZL+PADDRIGHT": "Aspect of the Cheetah / Pack",
+      "ZL+PADDDOWN": "Aspect of the Monkey",
+      "ZL+PADDLEFT": "Mend Pet / Revive Pet"
+    },
+    "ctrl_bar3_ZR": {
+      "ZR+PAD1": "Rapid Fire / Bestial Wrath",
+      "ZR+PAD2": "Intimidation / Readiness",
+      "ZR+PAD3": "Health / Mana Potion",
+      "ZR+PAD4": "Feed Pet / Dismiss Pet",
+      "ZR+PADDUP": "Mount",
+      "ZR+PADDRIGHT": "Track Humanoids / Beasts",
+      "ZR+PADDDOWN": "Hearthstone",
+      "ZR+PADDLEFT": "Eagle Eye / Scare Beast"
+    }
+  },
+  "macros": [
+    {
+      "name": "PW_HNT_FD",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Stops casting/attacking, pulls pet passive, and casts Feign Death",
+      "body": "#showtooltip Feign Death\n/stopcasting\n/petpassive\n/cast Feign Death"
+    },
+    {
+      "name": "PW_HNT_PET",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Sends pet to attack current target, or recalls pet if no enemy target is selected",
+      "body": "#showtooltip\n/petattack [harm,nodead]\n/petfollow [noharm][dead]"
+    },
+    {
+      "name": "PW_HNT_TRAP",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Deploys Freezing Trap cleanly in combat (WoW Forever combat traps)",
+      "body": "#showtooltip Freezing Trap\n/stopcasting\n/cast Freezing Trap"
+    },
+    {
+      "name": "PW_HNT_MARK",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Applies Hunter's Mark and sends pet if present",
+      "body": "#showtooltip Hunter's Mark\n/cast Hunter's Mark\n/petattack [pet,harm,nodead]"
+    }
+  ],
+  "consolePortNotes": "GamePadFaceMovementMaxAngle=115 preserves jump-shot and strafe kiting. Melee Survival Hunters can optionally set GamePadFaceMovementMaxAngle=0 for tighter melee turning."
+}

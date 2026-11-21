@@ -1,0 +1,86 @@
+{
+  "id": "druid",
+  "token": "DRUID",
+  "name": "Druid",
+  "specs": ["Feral (Cat/Bear)", "Balance", "Restoration"],
+  "playstyle": "Multi-Form Hybrid — fluid shapeshifting preserving Forever consumables/procs, Lacerate in Bear, raid-wide Moonkin/LotP",
+  "cvars": {
+    "GamePadEnable": "1",
+    "GamePadEmulateShift": "PADLTRIGGER",
+    "GamePadEmulateCtrl": "PADRTRIGGER",
+    "GamePadEmulateAlt": "NONE",
+    "GamePadEmulateTapWindowMs": "350",
+    "GamePadCursorAutoEnable": "1",
+    "GamePadCursorCentering": "1",
+    "GamePadFaceMovementMaxAngle": "0",
+    "SoftTargetEnemy": "3",
+    "SoftTargetInteract": "3",
+    "SoftTargetFriend": "1"
+  },
+  "paddles": {
+    "PADPADDLE1": { "label": "GR", "binding": "MACRO PW_DRU_CC", "role": "Form-Aware Control (Bash / Pounce / Entangling Roots)" },
+    "PADPADDLE2": { "label": "GL", "binding": "MACRO PW_DRU_TRV", "role": "Smart Travel / Aquatic / Cat Form Shift" },
+    "SHIFT-PADPADDLE1": { "label": "ZL+GR", "binding": "MACRO PW_DRU_BEAR", "role": "Emergency Dire Bear / Bear Form Shift" },
+    "SHIFT-PADPADDLE2": { "label": "ZL+GL", "binding": "MACRO PW_DRU_HOT", "role": "Smart Rejuvenation (Mouseover -> Target -> Self)" },
+    "PADPADDLE3": { "label": "C", "binding": "TOGGLEWORLDMAP", "role": "World Map (ZL+C = Bags)" }
+  },
+  "actionBarGuide": {
+    "base_bar1": {
+      "PAD1 (B)": "Cat: Claw/Shred | Bear: Maul/Lacerate | Caster: Wrath/Healing Touch",
+      "PAD2 (A)": "Cat: Ferocious Bite/Rip | Bear: Swipe/Mangle | Caster: Starfire/Rejuvenation",
+      "PAD3 (Y)": "Cat: Rake/Tiger's Fury | Bear: Demoralizing Roar | Caster: Moonfire/Regrowth",
+      "PAD4 (X)": "Cat: Faerie Fire (Feral) | Bear: Growl (Taunt) | Caster: Insect Swarm/Swiftmend",
+      "PADDUP": "Cat: Prowl | Bear: Feral Charge | Caster: Entangling Roots",
+      "PADDRIGHT": "Cat: Dash | Bear: Enrage | Caster: Abolish Poison / Remove Curse",
+      "PADDDOWN": "Cat: Cower | Bear: Frenzied Regeneration | Caster: Barkskin",
+      "PADDLEFT": "Faerie Fire / Hurricane / Tranquility"
+    },
+    "shift_bar2_ZL": {
+      "ZL+PAD1": "Cat Form (powershift-safe macro)",
+      "ZL+PAD2": "Bear Form / Dire Bear Form",
+      "ZL+PAD3": "Moonkin Form / Tree of Life",
+      "ZL+PAD4": "Nature's Swiftness / Innervate",
+      "ZL+PADDUP": "Target Party 1 (Resto)",
+      "ZL+PADDRIGHT": "Target Party 2 (Resto)",
+      "ZL+PADDDOWN": "Target Party 3 (Resto)",
+      "ZL+PADDLEFT": "Target Party 4 (Resto)"
+    },
+    "ctrl_bar3_ZR": {
+      "ZR+PAD1": "Innervate",
+      "ZR+PAD2": "Barkskin / Survival Instincts",
+      "ZR+PAD3": "Mark of the Wild / Thorns",
+      "ZR+PAD4": "Rebirth (Battle Res)",
+      "ZR+PADDUP": "Mount / Travel Form",
+      "ZR+PADDRIGHT": "Teleport: Moonglade",
+      "ZR+PADDDOWN": "Hearthstone",
+      "ZR+PADDLEFT": "Drink / Potion"
+    }
+  },
+  "macros": [
+    {
+      "name": "PW_DRU_CC",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Bear: Bash | Cat (Stealth): Pounce | Cat: Rip | Caster: Entangling Roots",
+      "body": "#showtooltip\n/cast [stance:1] Bash; [stance:3,stealth] Pounce; [stance:3] Rip; Entangling Roots"
+    },
+    {
+      "name": "PW_DRU_TRV",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Shifts to Aquatic Form while swimming, Travel Form outdoors, or Cat Form indoors",
+      "body": "#showtooltip\n/cast [swimming] Aquatic Form; [outdoors] Travel Form; Cat Form"
+    },
+    {
+      "name": "PW_DRU_BEAR",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Instant survival shift into Dire Bear Form (or Bear Form before L40)",
+      "body": "#showtooltip\n/cast Dire Bear Form\n/cast Bear Form"
+    },
+    {
+      "name": "PW_DRU_HOT",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Smart Rejuvenation on mouseover, friendly target, or yourself",
+      "body": "#showtooltip Rejuvenation\n/cast [@mouseover,help,nodead][help,nodead][@player] Rejuvenation"
+    }
+  ],
+  "consolePortNotes": "Action Bar 1 automatically pages per Druid form (Caster, Bear, Cat, Moonkin). Mirror Cat face buttons to Rogue (B=Builder, A=Finisher) and Bear face buttons to Warrior Tank for seamless alt muscle memory."
+}
