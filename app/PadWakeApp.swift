@@ -2,12 +2,7 @@ import Cocoa
 import SwiftUI
 import ServiceManagement
 
-// MARK: - Game Profiles Model
-
-enum GameProfileKind: String {
-    case wowWTF
-    case genericSDL2
-}
+// MARK: - WoW: Forever Setup Model
 
 enum WoWClassPreset: String, CaseIterable, Identifiable {
     case auto
@@ -45,7 +40,7 @@ enum WoWClassPreset: String, CaseIterable, Identifiable {
     var paddleSummary: String {
         switch self {
         case .auto:
-            return "Auto-detects your logged-in class · run /padwake apply in-game"
+            return "Auto-detects class & spec · run /padwake apply in-game"
         case .warrior:
             return "0° turn · GR Pummel/Bash · GL Charge/Intercept · Victory Rush"
         case .paladin:
@@ -53,9 +48,9 @@ enum WoWClassPreset: String, CaseIterable, Identifiable {
         case .hunter:
             return "115° kite · GR Feign Death · GL Pet Toggle · Combat Trap"
         case .rogue:
-            return "0° turn · Stealth mirror · GR Kick · GL Stealth/Vanish"
+            return "0° turn · Stealth ZR bar · GR Kick · GL Stealth/Vanish"
         case .priest:
-            return "115° cast · SoftFriend=3 · ZL+D-Pad Party · GR Scream · GL Shield"
+            return "115° cast · SoftFriend=3 · GR Scream · GL Shield · Smart Heal"
         case .shaman:
             return "0° turn · SoftFriend · GR Earth Shock · GL Indoor Ghost Wolf"
         case .mage:
@@ -68,57 +63,27 @@ enum WoWClassPreset: String, CaseIterable, Identifiable {
     }
 }
 
-struct DetectedTarget: Identifiable, Equatable {
+struct DetectedWoWTarget: Identifiable, Equatable {
     var id: String { path }
     let label: String
     let path: String
-    let isInstalled: Bool
+    let isForever: Bool
+    let isConfigured: Bool
+    let hasDialogueUI: Bool
+    let dialogueUISwitchMode: Bool
 }
 
-struct GameProfile: Identifiable {
-    let id: String
-    let name: String
-    let subtitle: String
-    let filesSummary: String
-    let kind: GameProfileKind
-    let resourceDir: String
-    let panelTitle: String
-    let panelMessage: String
-    let defaultSearchPath: String
-
-    static let all: [GameProfile] = [
-        GameProfile(
-            id: "wow-wtf",
-            name: "World of Warcraft",
-            subtitle: "Forever (Classic+), Classic & Retail",
-            filesSummary: "gamecontrollerdb.txt · GamePadConfig · PadWakeProfiles addon",
-            kind: .wowWTF,
-            resourceDir: "games/wow",
-            panelTitle: "Select World of Warcraft WTF Folder",
-            panelMessage: "Choose a WTF folder (e.g. _forever_/WTF, _classic_/WTF, or _retail_/WTF) to install PadWake's SDL2, GamePad, and class profiles.",
-            defaultSearchPath: "/Applications/World of Warcraft"
-        ),
-        GameProfile(
-            id: "generic-sdl2",
-            name: "Generic SDL2 Game",
-            subtitle: "Any game reading gamecontrollerdb.txt",
-            filesSummary: "gamecontrollerdb.txt (057E:2069 mapping)",
-            kind: .genericSDL2,
-            resourceDir: "games/sdl2",
-            panelTitle: "Select Game Folder",
-            panelMessage: "Choose the folder where your game loads gamecontrollerdb.txt.",
-            defaultSearchPath: "/Applications"
-        )
-    ]
-}
-
-struct ProfileStatusState {
-    var targets: [DetectedTarget] = []
+struct WoWSetupState {
+    var targets: [DetectedWoWTarget] = []
     var lastResult: String? = nil
     var lastResultIsError: Bool = false
 
-    var installedCount: Int {
-        targets.filter(\.isInstalled).count
+    var primaryTarget: DetectedWoWTarget? {
+        targets.first(where: \.isForever) ?? targets.first
+    }
+
+    var configuredCount: Int {
+        targets.filter(\.isConfigured).count
     }
 }
 
@@ -156,14 +121,14 @@ final class PadWakeModel: ObservableObject {
             }
         }
     }
-    @Published var showProfiles: Bool = false {
+    @Published var showWoWOptions: Bool = false {
         didSet {
-            if showProfiles {
-                refreshProfileStatuses()
+            if showWoWOptions {
+                refreshWoWStatus()
             }
         }
     }
-    @Published var profileStates: [String: ProfileStatusState] = [:]
+    @Published var wowState = WoWSetupState()
     @Published var selectedWoWClass: WoWClassPreset {
         didSet {
             UserDefaults.standard.set(selectedWoWClass.rawValue, forKey: "wowClassPreset")
@@ -179,10 +144,6 @@ final class PadWakeModel: ObservableObject {
     private var watcherStarted = false
     private var monitorActive = false
 
-    var totalInstalledProfilesCount: Int {
-        profileStates.values.reduce(0) { $0 + $1.installedCount }
-    }
-
     private init() {
         let savedLED = UserDefaults.standard.integer(forKey: "playerLED")
         self.playerLED = (1...4).contains(savedLED) ? savedLED : 1
@@ -194,7 +155,7 @@ final class PadWakeModel: ObservableObject {
         let savedClass = UserDefaults.standard.string(forKey: "wowClassPreset") ?? ""
         self.selectedWoWClass = WoWClassPreset(rawValue: savedClass) ?? .auto
         self.launchAtLogin = (SMAppService.mainApp.status == .enabled)
-        refreshProfileStatuses()
+        refreshWoWStatus()
     }
 
     func start() {
@@ -299,21 +260,20 @@ final class PadWakeModel: ObservableObject {
         pw_hid_monitor_stop()
     }
 
-    // MARK: - Game Profiles Detection & Installation
+    // MARK: - WoW: Forever Detection & Installation
 
-    private func savedPathsKey(for profileID: String) -> String {
-        "profilePaths.\(profileID)"
+    nonisolated private static let defaultWoWPath = "/Applications/World of Warcraft"
+    private static let savedWoWPathsKey = "profilePaths.wow-wtf"
+
+    private func savedWoWPaths() -> [String] {
+        UserDefaults.standard.stringArray(forKey: Self.savedWoWPathsKey) ?? []
     }
 
-    private func savedPaths(for profileID: String) -> [String] {
-        UserDefaults.standard.stringArray(forKey: savedPathsKey(for: profileID)) ?? []
-    }
-
-    private func rememberPath(_ path: String, for profileID: String) {
-        var paths = savedPaths(for: profileID)
+    private func rememberWoWPath(_ path: String) {
+        var paths = savedWoWPaths()
         if !paths.contains(path) {
             paths.append(path)
-            UserDefaults.standard.set(paths, forKey: savedPathsKey(for: profileID))
+            UserDefaults.standard.set(paths, forKey: Self.savedWoWPathsKey)
         }
     }
 
@@ -335,110 +295,129 @@ final class PadWakeModel: ObservableObject {
         return false
     }
 
-    nonisolated private static func checkInstalled(profile: GameProfile, folder: URL) -> Bool {
+    nonisolated private static func flavorRoot(for wtfFolder: URL) -> URL {
+        wtfFolder.lastPathComponent == "WTF" ? wtfFolder.deletingLastPathComponent() : wtfFolder
+    }
+
+    nonisolated private static func inspectWoWTarget(folder: URL) -> DetectedWoWTarget {
         let fm = FileManager.default
+        let root = flavorRoot(for: folder)
         let dbURL = folder.appendingPathComponent("gamecontrollerdb.txt")
-        guard let dbText = try? readTextPreservingEncoding(at: dbURL),
-              containsMapping(guid: primaryGUID, in: dbText) else {
-            return false
-        }
-        switch profile.kind {
-        case .wowWTF:
-            let jsonURL = folder.appendingPathComponent("GamePadConfig_PadWake.json")
-            return fm.fileExists(atPath: jsonURL.path)
-        case .genericSDL2:
-            return true
-        }
-    }
+        let jsonURL = folder.appendingPathComponent("GamePadConfig_PadWake.json")
+        let addonURL = root
+            .appendingPathComponent("Interface")
+            .appendingPathComponent("AddOns")
+            .appendingPathComponent("PadWakeProfiles")
+            .appendingPathComponent("PadWakeProfiles.lua")
 
-    nonisolated private static func displayLabel(for folder: URL, kind: GameProfileKind) -> String {
-        switch kind {
-        case .wowWTF:
-            let name = folder.lastPathComponent
-            let parent = folder.deletingLastPathComponent().lastPathComponent
-            if name == "WTF" && !parent.isEmpty {
-                return "\(parent)/WTF"
+        let hasDB = (try? readTextPreservingEncoding(at: dbURL))
+            .map { containsMapping(guid: primaryGUID, in: $0) } ?? false
+        let isConfigured = hasDB
+            && fm.fileExists(atPath: jsonURL.path)
+            && fm.fileExists(atPath: addonURL.path)
+
+        let dialogueAddonDir = root
+            .appendingPathComponent("Interface")
+            .appendingPathComponent("AddOns")
+            .appendingPathComponent("DialogueUI")
+        let hasDialogueUI = fm.fileExists(atPath: dialogueAddonDir.path)
+
+        var dialogueSwitch = false
+        if hasDialogueUI {
+            let accountDir = folder.appendingPathComponent("Account")
+            if let accounts = try? fm.contentsOfDirectory(
+                at: accountDir, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]
+            ) {
+                for acct in accounts {
+                    let sv = acct
+                        .appendingPathComponent("SavedVariables")
+                        .appendingPathComponent("DialogueUI.lua")
+                    if let txt = try? readTextPreservingEncoding(at: sv),
+                       txt.contains("[\"InputDevice\"] = 4") {
+                        dialogueSwitch = true
+                        break
+                    }
+                }
             }
-            return name
-        case .genericSDL2:
-            return folder.lastPathComponent
         }
+
+        let label = displayLabel(for: folder)
+        return DetectedWoWTarget(
+            label: label,
+            path: folder.standardizedFileURL.path,
+            isForever: label.hasPrefix("_forever_"),
+            isConfigured: isConfigured,
+            hasDialogueUI: hasDialogueUI,
+            dialogueUISwitchMode: dialogueSwitch
+        )
     }
 
-    func refreshProfileStatuses() {
-        let savedSnapshot: [String: [String]] = Dictionary(
-            uniqueKeysWithValues: GameProfile.all.map { ($0.id, savedPaths(for: $0.id)) }
-        )
+    nonisolated private static func displayLabel(for folder: URL) -> String {
+        let name = folder.lastPathComponent
+        let parent = folder.deletingLastPathComponent().lastPathComponent
+        if name == "WTF" && !parent.isEmpty {
+            return "\(parent)/WTF"
+        }
+        return name
+    }
+
+    func refreshWoWStatus() {
+        let savedSnapshot = savedWoWPaths()
 
         ioQueue.async { [weak self] in
             let fm = FileManager.default
-            var scanned: [String: [DetectedTarget]] = [:]
+            var seen = Set<String>()
+            var targets: [DetectedWoWTarget] = []
 
-            for profile in GameProfile.all {
-                var seen = Set<String>()
-                var targets: [DetectedTarget] = []
+            func appendIfDir(_ path: String) {
+                let normalized = URL(fileURLWithPath: path).standardizedFileURL.path
+                guard !seen.contains(normalized) else { return }
+                var isDir: ObjCBool = false
+                guard fm.fileExists(atPath: normalized, isDirectory: &isDir), isDir.boolValue else { return }
+                seen.insert(normalized)
+                targets.append(Self.inspectWoWTarget(folder: URL(fileURLWithPath: normalized)))
+            }
 
-                func appendIfDir(_ path: String) {
-                    let normalized = URL(fileURLWithPath: path).standardizedFileURL.path
-                    guard !seen.contains(normalized) else { return }
-                    var isDir: ObjCBool = false
-                    guard fm.fileExists(atPath: normalized, isDirectory: &isDir), isDir.boolValue else { return }
-                    seen.insert(normalized)
-                    let url = URL(fileURLWithPath: normalized)
-                    targets.append(DetectedTarget(
-                        label: Self.displayLabel(for: url, kind: profile.kind),
-                        path: normalized,
-                        isInstalled: Self.checkInstalled(profile: profile, folder: url)
-                    ))
+            // Auto-detect WoW flavors under /Applications/World of Warcraft/*/WTF (_forever_ first)
+            let wowBase = URL(fileURLWithPath: Self.defaultWoWPath)
+            if let entries = try? fm.contentsOfDirectory(
+                at: wowBase, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]
+            ) {
+                let sorted = entries.sorted { a, b in
+                    if a.lastPathComponent == "_forever_" { return true }
+                    if b.lastPathComponent == "_forever_" { return false }
+                    return a.lastPathComponent < b.lastPathComponent
                 }
-
-                // Auto-detect standard WoW flavors under /Applications/World of Warcraft/*/WTF
-                if profile.kind == .wowWTF {
-                    let wowBase = URL(fileURLWithPath: profile.defaultSearchPath)
-                    if let entries = try? fm.contentsOfDirectory(
-                        at: wowBase, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]
-                    ) {
-                        let sorted = entries.sorted { $0.lastPathComponent < $1.lastPathComponent }
-                        for entry in sorted {
-                            let wtf = entry.appendingPathComponent("WTF")
-                            appendIfDir(wtf.path)
-                        }
-                    }
+                for entry in sorted {
+                    appendIfDir(entry.appendingPathComponent("WTF").path)
                 }
+            }
 
-                // Include any user-selected custom paths saved previously
-                for saved in savedSnapshot[profile.id] ?? [] {
-                    appendIfDir(saved)
-                }
-
-                scanned[profile.id] = targets
+            for saved in savedSnapshot {
+                appendIfDir(saved)
             }
 
             Task { @MainActor in
                 guard let self else { return }
-                for (profileID, targets) in scanned {
-                    var existing = self.profileStates[profileID] ?? ProfileStatusState()
-                    existing.targets = targets
-                    self.profileStates[profileID] = existing
-                }
+                self.wowState.targets = targets
             }
         }
     }
 
-    func chooseFolderAndInstall(profile: GameProfile) {
+    func chooseWoWFolderAndInstall() {
         let panel = NSOpenPanel()
-        panel.title = profile.panelTitle
-        panel.message = profile.panelMessage
-        panel.prompt = "Install Profile"
+        panel.title = "Select World of Warcraft: Forever WTF Folder"
+        panel.message = "Choose your _forever_/WTF folder (or the _forever_ folder itself) to install Switch 2 mappings and PadWakeProfiles."
+        panel.prompt = "Install"
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
 
         let fm = FileManager.default
-        if let last = savedPaths(for: profile.id).last, fm.fileExists(atPath: last) {
+        if let last = savedWoWPaths().last, fm.fileExists(atPath: last) {
             panel.directoryURL = URL(fileURLWithPath: last)
-        } else if fm.fileExists(atPath: profile.defaultSearchPath) {
-            panel.directoryURL = URL(fileURLWithPath: profile.defaultSearchPath)
+        } else if fm.fileExists(atPath: Self.defaultWoWPath) {
+            panel.directoryURL = URL(fileURLWithPath: Self.defaultWoWPath)
         } else {
             panel.directoryURL = URL(fileURLWithPath: "/Applications")
         }
@@ -446,8 +425,7 @@ final class PadWakeModel: ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, var folder = panel.url else { return }
 
-        // If user picked a WoW flavor folder (e.g. _forever_) instead of _forever_/WTF, step into WTF/
-        if profile.kind == .wowWTF && folder.lastPathComponent != "WTF" {
+        if folder.lastPathComponent != "WTF" {
             let nestedWTF = folder.appendingPathComponent("WTF")
             var isDir: ObjCBool = false
             if fm.fileExists(atPath: nestedWTF.path, isDirectory: &isDir), isDir.boolValue {
@@ -455,49 +433,40 @@ final class PadWakeModel: ObservableObject {
             }
         }
 
-        install(profile: profile, into: folder)
+        installWoW(into: folder)
     }
 
-    func install(profile: GameProfile, into folder: URL) {
+    func installWoW(into folder: URL) {
         let fm = FileManager.default
-        var state = profileStates[profile.id] ?? ProfileStatusState()
 
         do {
             var isDir: ObjCBool = false
             guard fm.fileExists(atPath: folder.path, isDirectory: &isDir), isDir.boolValue else {
-                state.lastResult = "Selected target is not an accessible directory."
-                state.lastResultIsError = true
-                profileStates[profile.id] = state
+                wowState.lastResult = "Selected target is not an accessible directory."
+                wowState.lastResultIsError = true
                 return
             }
 
-            let dbRes = Bundle.main.url(
-                forResource: "gamecontrollerdb_padwake", withExtension: "txt", subdirectory: profile.resourceDir
-            ) ?? Bundle.main.url(
+            guard let dbRes = Bundle.main.url(
                 forResource: "gamecontrollerdb_padwake", withExtension: "txt", subdirectory: "games/sdl2"
-            )
-            guard let dbRes else {
-                state.lastResult = "Bundled SDL2 mapping template missing."
-                state.lastResultIsError = true
-                profileStates[profile.id] = state
+            ) else {
+                wowState.lastResult = "Bundled SDL2 mapping template missing."
+                wowState.lastResultIsError = true
                 return
             }
 
             var actions: [String] = []
 
-            // 1. Upsert SDL2 mapping lines idempotently into gamecontrollerdb.txt without clobbering other entries
+            // 1. Upsert Switch 2 SDL2 mapping lines idempotently into gamecontrollerdb.txt
             let dbDst = folder.appendingPathComponent("gamecontrollerdb.txt")
             let templateLines = try String(contentsOf: dbRes, encoding: .utf8)
                 .components(separatedBy: .newlines)
                 .filter { !$0.isEmpty && !$0.hasPrefix("#") }
 
-            var existing: String
             let dbExisted = fm.fileExists(atPath: dbDst.path)
-            if dbExisted {
-                existing = try Self.readTextPreservingEncoding(at: dbDst)
-            } else {
-                existing = "# SDL2 Game Controller Mappings File\n"
-            }
+            let existing = dbExisted
+                ? try Self.readTextPreservingEncoding(at: dbDst)
+                : "# SDL2 Game Controller Mappings File\n"
 
             var lines = existing.components(separatedBy: "\n")
             var added = 0
@@ -530,87 +499,73 @@ final class PadWakeModel: ObservableObject {
                 let parts = [added > 0 ? "+\(added)" : nil, updated > 0 ? "~\(updated)" : nil].compactMap { $0 }
                 actions.append("gamecontrollerdb.txt (\(parts.joined(separator: ", ")))")
             } else {
-                actions.append("gamecontrollerdb.txt (up to date)")
+                actions.append("gamecontrollerdb.txt")
             }
 
-            // 2. WoW-specific config files
-            if profile.kind == .wowWTF {
-                guard let jsonRes = Bundle.main.url(
-                    forResource: "GamePadConfig_PadWake", withExtension: "json", subdirectory: profile.resourceDir
-                ) else {
-                    state.lastResult = "Bundled GamePadConfig JSON missing."
-                    state.lastResultIsError = true
-                    profileStates[profile.id] = state
-                    return
-                }
-                let jsonDst = folder.appendingPathComponent("GamePadConfig_PadWake.json")
-                let jsonData = try Data(contentsOf: jsonRes)
-                try jsonData.write(to: jsonDst, options: [.atomic])
-                // Remove legacy stale Switch2 config so it cannot alphabetically override PadWake's config
-                let legacyJsonDst = folder.appendingPathComponent("GamePadConfig_Switch2.json")
-                if fm.fileExists(atPath: legacyJsonDst.path) {
-                    try? fm.removeItem(at: legacyJsonDst)
-                }
-                actions.append("GamePadConfig_PadWake.json")
+            // 2. GamePadConfig_PadWake.json + Config.wtf
+            guard let jsonRes = Bundle.main.url(
+                forResource: "GamePadConfig_PadWake", withExtension: "json", subdirectory: "games/wow"
+            ) else {
+                wowState.lastResult = "Bundled GamePadConfig JSON missing."
+                wowState.lastResultIsError = true
+                return
+            }
+            let jsonDst = folder.appendingPathComponent("GamePadConfig_PadWake.json")
+            let jsonData = try Data(contentsOf: jsonRes)
+            try jsonData.write(to: jsonDst, options: [.atomic])
+            let legacyJsonDst = folder.appendingPathComponent("GamePadConfig_Switch2.json")
+            if fm.fileExists(atPath: legacyJsonDst.path) {
+                try? fm.removeItem(at: legacyJsonDst)
+            }
+            actions.append("GamePadConfig")
 
-                let cfgDst = folder.appendingPathComponent("Config.wtf")
-                if fm.fileExists(atPath: cfgDst.path) {
-                    var cfg = try Self.readTextPreservingEncoding(at: cfgDst)
-                    if !cfg.contains("SET GamePadEnable ") {
-                        if !cfg.hasSuffix("\n") { cfg += "\n" }
-                        cfg += "SET GamePadEnable \"1\"\n"
-                        try cfg.write(to: cfgDst, atomically: true, encoding: .utf8)
-                        actions.append("Config.wtf (GamePadEnable=1)")
-                    }
-                }
-
-                // 3. Install/update lightweight PadWakeProfiles companion addon (sibling Interface/AddOns)
-                if let addonSrc = Bundle.main.resourceURL?.appendingPathComponent("games/wow/AddOns/PadWakeProfiles"),
-                   fm.fileExists(atPath: addonSrc.path) {
-                    let flavorRoot = folder.lastPathComponent == "WTF"
-                        ? folder.deletingLastPathComponent()
-                        : folder
-                    let addonDst = flavorRoot
-                        .appendingPathComponent("Interface")
-                        .appendingPathComponent("AddOns")
-                        .appendingPathComponent("PadWakeProfiles")
-                    try fm.createDirectory(at: addonDst, withIntermediateDirectories: true)
-
-                    for fileName in ["PadWakeProfiles.toc", "PadWakeProfiles.lua"] {
-                        let srcFile = addonSrc.appendingPathComponent(fileName)
-                        let dstFile = addonDst.appendingPathComponent(fileName)
-                        let fileData = try Data(contentsOf: srcFile)
-                        try fileData.write(to: dstFile, options: [.atomic])
-                    }
-
-                    // Strictly whitelisted Lua token from WoWClassPreset enum
-                    let presetLua = """
-                    -- Updated automatically by PadWake.app
-                    local _, ns = ...
-                    ns.selectedPreset = "\(selectedWoWClass.luaToken)"
-                    """ + "\n"
-                    let presetDst = addonDst.appendingPathComponent("SelectedPreset.lua")
-                    try presetLua.write(to: presetDst, atomically: true, encoding: .utf8)
-                    actions.append("PadWakeProfiles (\(selectedWoWClass.displayName))")
+            let cfgDst = folder.appendingPathComponent("Config.wtf")
+            if fm.fileExists(atPath: cfgDst.path) {
+                var cfg = try Self.readTextPreservingEncoding(at: cfgDst)
+                if !cfg.contains("SET GamePadEnable ") {
+                    if !cfg.hasSuffix("\n") { cfg += "\n" }
+                    cfg += "SET GamePadEnable \"1\"\n"
+                    try cfg.write(to: cfgDst, atomically: true, encoding: .utf8)
                 }
             }
 
-            rememberPath(folder.standardizedFileURL.path, for: profile.id)
-            let label = Self.displayLabel(for: folder, kind: profile.kind)
-            state.lastResult = "\(label): " + actions.joined(separator: ", ")
-            state.lastResultIsError = false
-            profileStates[profile.id] = state
-            refreshProfileStatuses()
-            if profile.kind == .wowWTF {
-                infoMessage = "Installed into \(label). Run /padwake apply in-game."
-            } else {
-                infoMessage = "Installed \(profile.name) profile into \(label)."
+            // 3. Install/update lightweight PadWakeProfiles companion addon
+            if let addonSrc = Bundle.main.resourceURL?.appendingPathComponent("games/wow/AddOns/PadWakeProfiles"),
+               fm.fileExists(atPath: addonSrc.path) {
+                let root = Self.flavorRoot(for: folder)
+                let addonDst = root
+                    .appendingPathComponent("Interface")
+                    .appendingPathComponent("AddOns")
+                    .appendingPathComponent("PadWakeProfiles")
+                try fm.createDirectory(at: addonDst, withIntermediateDirectories: true)
+
+                for fileName in ["PadWakeProfiles.toc", "PadWakeProfiles.lua"] {
+                    let srcFile = addonSrc.appendingPathComponent(fileName)
+                    let dstFile = addonDst.appendingPathComponent(fileName)
+                    let fileData = try Data(contentsOf: srcFile)
+                    try fileData.write(to: dstFile, options: [.atomic])
+                }
+
+                let presetLua = """
+                -- Updated automatically by PadWake.app
+                local _, ns = ...
+                ns.selectedPreset = "\(selectedWoWClass.luaToken)"
+                """ + "\n"
+                let presetDst = addonDst.appendingPathComponent("SelectedPreset.lua")
+                try presetLua.write(to: presetDst, atomically: true, encoding: .utf8)
+                actions.append("PadWakeProfiles (\(selectedWoWClass.displayName))")
             }
+
+            rememberWoWPath(folder.standardizedFileURL.path)
+            let label = Self.displayLabel(for: folder)
+            wowState.lastResult = "\(label): " + actions.joined(separator: " · ")
+            wowState.lastResultIsError = false
+            refreshWoWStatus()
+            infoMessage = "Ready in \(label). Run /padwake apply in-game."
         } catch {
-            state.lastResult = "Install failed: \(error.localizedDescription)"
-            state.lastResultIsError = true
-            profileStates[profile.id] = state
-            infoMessage = state.lastResult
+            wowState.lastResult = "Setup failed: \(error.localizedDescription)"
+            wowState.lastResultIsError = true
+            infoMessage = wowState.lastResult
         }
     }
 
@@ -687,115 +642,124 @@ struct StickDotView: View {
     }
 }
 
-struct GameProfileRowView: View {
-    let profile: GameProfile
-    let state: ProfileStatusState
-    let wowClassSelection: Binding<WoWClassPreset>?
-    let onInstallTarget: (DetectedTarget) -> Void
-    let onChooseFolder: () -> Void
+struct ReadinessRowView<Trailing: View>: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let subtitle: String
+    @ViewBuilder let trailing: () -> Trailing
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(profile.name)
-                        .font(.caption.weight(.semibold))
-                    Text(profile.subtitle)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer(minLength: 4)
-                if state.installedCount > 0 {
-                    Label("Installed", systemImage: "checkmark.circle.fill")
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(.green)
-                        .labelStyle(.titleAndIcon)
-                } else {
-                    Text("Not installed")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(iconColor)
+                .frame(width: 14)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.caption.weight(.medium))
+                Text(subtitle)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
             }
+            Spacer(minLength: 4)
+            trailing()
+        }
+    }
+}
 
-            Text(profile.filesSummary)
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+struct WoWReadinessCardView: View {
+    @ObservedObject var model: PadWakeModel
 
-            if let classBinding = wowClassSelection {
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Text("Class Preset")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Picker("", selection: classBinding) {
-                            ForEach(WoWClassPreset.allCases) { preset in
-                                Text(preset.displayName).tag(preset)
-                            }
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                        .controlSize(.mini)
-                    }
-                    Text(classBinding.wrappedValue.paddleSummary)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.top, 2)
-            }
+    private var primary: DetectedWoWTarget? {
+        model.wowState.primaryTarget
+    }
 
-            if !state.targets.isEmpty {
-                VStack(spacing: 4) {
-                    ForEach(state.targets) { target in
-                        HStack(spacing: 6) {
-                            Image(systemName: target.isInstalled ? "checkmark.circle.fill" : "folder")
-                                .font(.caption2)
-                                .foregroundStyle(target.isInstalled ? Color.green : Color.secondary)
-                            Text(target.label)
-                                .font(.caption2.monospaced())
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                            Spacer()
-                            Button(target.isInstalled ? "Update" : "Install") {
-                                onInstallTarget(target)
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.mini)
-                        }
-                    }
-                }
-                .padding(.top, 2)
-            }
-
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
             HStack {
-                Button {
-                    onChooseFolder()
-                } label: {
-                    Label(state.targets.isEmpty ? "Choose Folder…" : "Other Folder…", systemImage: "folder.badge.plus")
-                        .font(.caption2)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.mini)
+                Text("WoW: Forever Readiness")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
                 Spacer()
+                if model.status == PW_STATUS_AWAKE && model.disableMFiVeto && (primary?.isConfigured ?? false) {
+                    Label("Ready", systemImage: "checkmark.seal.fill")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.green)
+                }
             }
 
-            if let result = state.lastResult {
-                Text(result)
-                    .font(.caption2)
-                    .foregroundStyle(state.lastResultIsError ? Color.red : Color.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+            // 1. Switch 2 Controller state
+            ReadinessRowView(
+                icon: model.status == PW_STATUS_AWAKE ? "checkmark.circle.fill" : (model.status == PW_STATUS_ASLEEP ? "exclamationmark.circle.fill" : "circle.dashed"),
+                iconColor: model.status == PW_STATUS_AWAKE ? .green : (model.status == PW_STATUS_ASLEEP ? .orange : .secondary),
+                title: "Switch 2 Controller",
+                subtitle: model.status == PW_STATUS_AWAKE ? "Awake & streaming HID (057E:2069)" : (model.status == PW_STATUS_ASLEEP ? "Connected but asleep" : "Connect over USB-C")
+            ) {
+                if model.status != PW_STATUS_AWAKE {
+                    Button("Wake") { model.wakeNow() }
+                        .buttonStyle(.bordered)
+                        .controlSize(.mini)
+                }
+            }
+
+            // 2. macOS SDL2 MFi Veto fix
+            ReadinessRowView(
+                icon: model.disableMFiVeto ? "checkmark.circle.fill" : "exclamationmark.triangle.fill",
+                iconColor: model.disableMFiVeto ? .green : .orange,
+                title: "macOS SDL2 Veto Fix",
+                subtitle: model.disableMFiVeto ? "SDL_JOYSTICK_MFI=0 active" : "Disabled — WoW may see 0 pads"
+            ) {
+                Toggle("", isOn: $model.disableMFiVeto)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+            }
+
+            // 3. WoW: Forever files + PadWakeProfiles addon
+            ReadinessRowView(
+                icon: (primary?.isConfigured ?? false) ? "checkmark.circle.fill" : "exclamationmark.circle.fill",
+                iconColor: (primary?.isConfigured ?? false) ? .green : .orange,
+                title: "WoW: Forever Setup",
+                subtitle: primary.map { $0.isConfigured ? "\($0.label) + PadWakeProfiles" : "\($0.label) — needs install" } ?? "Folder not detected yet"
+            ) {
+                if let target = primary {
+                    Button(target.isConfigured ? "Update" : "Setup") {
+                        model.installWoW(into: URL(fileURLWithPath: target.path))
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+                } else {
+                    Button("Locate…") {
+                        model.chooseWoWFolderAndInstall()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+                }
+            }
+
+            // 4. DialogueUI Switch Mode (only shown when DialogueUI addon is installed)
+            if let target = primary, target.hasDialogueUI {
+                ReadinessRowView(
+                    icon: target.dialogueUISwitchMode ? "checkmark.circle.fill" : "exclamationmark.circle.fill",
+                    iconColor: target.dialogueUISwitchMode ? .green : .orange,
+                    title: "DialogueUI Addon",
+                    subtitle: target.dialogueUISwitchMode ? "Switch mode (A=Accept, B=Exit)" : "Set Control → Input Device → Switch"
+                ) {
+                    EmptyView()
+                }
             }
         }
-        .padding(8)
+        .padding(9)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.primary.opacity(0.045))
         .overlay(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(Color.primary.opacity(0.08), lineWidth: 0.75)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
@@ -915,51 +879,79 @@ struct PopoverView: View {
 
             Divider()
 
-            // macOS SDL2 Compatibility & Game Profiles
+            // WoW: Forever Readiness Checklist & Class Options
             VStack(alignment: .leading, spacing: 8) {
-                Toggle(isOn: $model.disableMFiVeto) {
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Fix macOS SDL2 MFi Veto")
-                            .font(.subheadline)
-                        Text("Sets SDL_JOYSTICK_MFI=0 for game launchers")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .toggleStyle(.switch)
-                .controlSize(.small)
+                WoWReadinessCardView(model: model)
 
-                DisclosureGroup(isExpanded: $model.showProfiles) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(GameProfile.all) { profile in
-                            let st = model.profileStates[profile.id] ?? ProfileStatusState()
-                            GameProfileRowView(
-                                profile: profile,
-                                state: st,
-                                wowClassSelection: profile.kind == .wowWTF ? $model.selectedWoWClass : nil,
-                                onInstallTarget: { target in
-                                    model.install(profile: profile, into: URL(fileURLWithPath: target.path))
-                                },
-                                onChooseFolder: {
-                                    model.chooseFolderAndInstall(profile: profile)
+                DisclosureGroup(isExpanded: $model.showWoWOptions) {
+                    VStack(alignment: .leading, spacing: 7) {
+                        HStack(spacing: 6) {
+                            Text("Class Preset")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Picker("", selection: $model.selectedWoWClass) {
+                                ForEach(WoWClassPreset.allCases) { preset in
+                                    Text(preset.displayName).tag(preset)
                                 }
-                            )
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.menu)
+                            .controlSize(.mini)
+                        }
+                        Text(model.selectedWoWClass.paddleSummary)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if !model.wowState.targets.isEmpty {
+                            Divider()
+                            ForEach(model.wowState.targets) { target in
+                                HStack(spacing: 6) {
+                                    Image(systemName: target.isConfigured ? "checkmark.circle.fill" : "folder")
+                                        .font(.caption2)
+                                        .foregroundStyle(target.isConfigured ? Color.green : Color.secondary)
+                                    Text(target.label)
+                                        .font(.caption2.monospaced())
+                                        .lineLimit(1)
+                                        .truncationMode(.middle)
+                                    Spacer()
+                                    Button(target.isConfigured ? "Update" : "Install") {
+                                        model.installWoW(into: URL(fileURLWithPath: target.path))
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.mini)
+                                }
+                            }
+                        }
+
+                        HStack {
+                            Button {
+                                model.chooseWoWFolderAndInstall()
+                            } label: {
+                                Label("Other WoW Folder…", systemImage: "folder.badge.plus")
+                                    .font(.caption2)
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.mini)
+                            Spacer()
+                        }
+
+                        if let result = model.wowState.lastResult {
+                            Text(result)
+                                .font(.caption2)
+                                .foregroundStyle(model.wowState.lastResultIsError ? Color.red : Color.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                     .padding(.top, 6)
                 } label: {
                     HStack {
-                        Text("Game Profiles")
+                        Text("Class Preset & Folders")
                         Spacer()
-                        if model.totalInstalledProfilesCount > 0 {
-                            Text("\(model.totalInstalledProfilesCount) installed")
-                                .font(.caption2)
-                                .foregroundStyle(.green)
-                        } else {
-                            Text("WoW · SDL2")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
+                        Text(model.selectedWoWClass.displayName)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .font(.subheadline)
@@ -994,7 +986,7 @@ struct PopoverView: View {
             }
         }
         .padding(14)
-        .frame(width: 316)
+        .frame(width: 328)
         .fixedSize(horizontal: false, vertical: true)
     }
 }
@@ -1090,7 +1082,7 @@ struct PadWakeApp: App {
             PopoverView(model: model)
                 .onAppear {
                     model.refreshStatus()
-                    model.refreshProfileStatuses()
+                    model.refreshWoWStatus()
                 }
                 .onDisappear {
                     model.showTester = false
