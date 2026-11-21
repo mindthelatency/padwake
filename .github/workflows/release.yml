@@ -81,6 +81,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.meta.outputs.tag }}
           VERSION: ${{ steps.meta.outputs.version }}
+          RELEASE_BODY: ${{ github.event.release.body }}
         run: |
           DMG_PATH="build/PadWake-${VERSION}-macOS.dmg"
           gh release upload "$TAG" "$DMG_PATH" "${DMG_PATH}.sha256" --clobber
+
+          # If the release was published without notes, auto-populate the PR recap since the last release.
+          if [[ -z "${RELEASE_BODY// /}" ]]; then
+            PREV_TAG="$(gh release list --exclude-drafts --limit 20 --json tagName --jq "[.[] | select(.tagName != \"$TAG\")][0].tagName // \"\"")"
+            if [[ -n "$PREV_TAG" ]]; then
+              NOTES="$(gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+                -f tag_name="$TAG" \
+                -f previous_tag_name="$PREV_TAG" \
+                --jq '.body')"
+            else
+              NOTES="$(gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+                -f tag_name="$TAG" \
+                --jq '.body')"
+            fi
+            if [[ -n "$NOTES" ]]; then
+              gh release edit "$TAG" --notes "$NOTES"
+            fi
+          fi
