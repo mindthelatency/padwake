@@ -20,6 +20,13 @@ local function isConsolePortLoaded()
     return false
 end
 
+local function isForeverGamepadUI()
+    if C_InputInterfaceStyle and C_InputInterfaceStyle.GetCurrentStyle then
+        return C_InputInterfaceStyle.GetCurrentStyle() == 1
+    end
+    return GetCVar and GetCVar("InputDeviceInterfaceStyle") == "1"
+end
+
 local function safeSetCVar(key, value)
     if C_CVar and C_CVar.GetCVarInfo then
         if C_CVar.GetCVarInfo(key) == nil then
@@ -809,6 +816,57 @@ local function pickupEntry(entry, knownSpells)
     return false, nil
 end
 
+-- Maps logical slot index (1=B, 2=A, 3=Y, 4=X, 5=Up, 6=Right, 7=Down, 8=Left)
+-- to WoW: Forever's GamepadMainActionBarFrame ActionButton index (1..8):
+--   1=Left, 2=Up, 3=Right, 4=Down, 5=Y(Left), 6=X(Top), 7=A(Right), 8=B(Bottom)
+local FOREVER_SLOT_TO_BTN = {
+    [1] = 8, -- B (Bottom)
+    [2] = 7, -- A (Right)
+    [3] = 5, -- Y (Left)
+    [4] = 6, -- X (Top)
+    [5] = 2, -- D-Pad Up
+    [6] = 3, -- D-Pad Right
+    [7] = 4, -- D-Pad Down
+    [8] = 1, -- D-Pad Left
+}
+
+local FOREVER_BARS = {
+    right  = { prefix = "GamepadMainActionBarFramePageUnitRightCenteredAnchorRightBarActionButton",   fallbackOffset = 192, label = "ZR (Right)" },
+    left   = { prefix = "GamepadMainActionBarFramePageUnitLeftCenteredAnchorLeftBarActionButton",     fallbackOffset = 184, label = "ZL (Left)" },
+    bottom = { prefix = "GamepadMainActionBarFramePageUnitBottomCenteredAnchorBottomBarActionButton", fallbackOffset = 200, label = "ZL+ZR (Bottom)" },
+}
+
+local function getForeverActionSlot(barKey, logicalIdx)
+    local meta = FOREVER_BARS[barKey]
+    local btnIdx = FOREVER_SLOT_TO_BTN[logicalIdx]
+    if not meta or not btnIdx then return nil end
+    local frame = _G[meta.prefix .. tostring(btnIdx)]
+    if frame and type(frame.action) == "number" and frame.action > 0 then
+        return frame.action
+    end
+    return meta.fallbackOffset + btnIdx
+end
+
+local function activeBonusKeyForClass(token)
+    if token == "ROGUE" and IsStealthed and IsStealthed() then
+        return "bonus1", "Stealth"
+    elseif token == "WARRIOR" and GetShapeshiftForm then
+        local st = GetShapeshiftForm()
+        if st == 2 then return "bonus2", "Defensive Stance"
+        elseif st == 3 then return "bonus3", "Berserker Stance"
+        elseif st == 1 then return "bonus1", "Battle Stance"
+        end
+    elseif token == "DRUID" and GetShapeshiftFormID then
+        local fid = GetShapeshiftFormID()
+        if fid == 1 then return "bonus1", "Cat Form"
+        elseif fid == 5 or fid == 8 then return "bonus3", "Bear Form"
+        end
+    elseif token == "PRIEST" and GetShapeshiftForm and GetShapeshiftForm() == 1 then
+        return "bonus1", "Shadowform"
+    end
+    return nil, nil
+end
+
 local function populateBars(token, fillOnly)
     if InCombatLockdown() then
         printMsg("Cannot assign action bars during combat. Try again after combat.")
@@ -825,9 +883,77 @@ local function populateBars(token, fillOnly)
     local placed = 0
     local skippedOccupied = 0
     local usedMain = {}
-
-    local barOrder = { "base", "shift", "ctrl", "both", "bonus1", "bonus2", "bonus3" }
     local summaryParts = {}
+    local btnNames = { "B", "A", "Y", "X" }
+
+    if isForeverGamepadUI() then
+        -- WoW: Forever native Controller UI (GamepadMainActionBarFrame slots 185..208, stance-paged)
+        local bonusKey, stanceLabel = activeBonusKeyForClass(token)
+        local primarySpec = (bonusKey and profile.bars[bonusKey]) or profile.bars.base
+
+        -- Right bar (ZR) = primary combat (or active Stealth/Stance/Form bar)
+        -- Left bar  (ZL) = secondary combat / defensives / utility
+        -- Bottom bar (ZL+ZR) = cooldowns / macros / Hearthstone
+        local plan = {
+            { target = "right",  spec = primarySpec,        isPrimary = true },
+            { target = "left",   spec = profile.bars.shift, isPrimary = false },
+            { target = "bottom", spec = profile.bars.ctrl,  isPrimary = false },
+        }
+
+        for _, p in ipairs(plan) do
+            if p.spec then
+                local usedSet = p.isPrimary and {} or usedMain
+                for slotIdx = 1, 8 do
+                    local candidates = p.spec[slotIdx]
+                    local actionSlot = getForeverActionSlot(p.target, slotIdx)
+                    if candidates and actionSlot then
+                        if fillOnly and HasAction and HasAction(actionSlot) then
+                            skippedOccupied = skippedOccupied + 1
+                        else
+                            for _, entry in ipairs(candidates) do
+                                local normKey = string.lower(entry)
+                                if not usedSet[normKey] and (p.isPrimary or not usedMain[normKey]) then
+                                    local ok, label = pickupEntry(entry, knownSpells)
+                                    if ok then
+                                        PlaceAction(actionSlot)
+                                        ClearCursor()
+                                        usedSet[normKey] = true
+                                        usedMain[normKey] = true
+                                        placed = placed + 1
+                                        if p.isPrimary and slotIdx <= 4 then
+                                            table.insert(summaryParts, btnNames[slotIdx] .. "=" .. tostring(label))
+                                        end
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                ClearCursor()
+            end
+        end
+
+        local modeLabel = fillOnly and " (empty slots only)" or ""
+        local stanceNote = stanceLabel and (" [" .. stanceLabel .. "]") or ""
+        printMsg(string.format("Assigned %d %s skills onto Forever Crossbar (ZR/ZL/ZL+ZR) for Level %d [%s]%s%s.",
+            placed, profile.name, level, levelTierLabel(level), stanceNote, modeLabel))
+        if #summaryParts > 0 then
+            printMsg("ZR Primary diamond: " .. table.concat(summaryParts, " | "))
+        end
+        if token == "ROGUE" and not stanceLabel then
+            printMsg("Tip: Press GL to enter Stealth and run '/padwake bars' once more to populate your Stealth ZR diamond too.")
+        elseif (token == "WARRIOR" or token == "DRUID") and not stanceLabel then
+            printMsg("Tip: Shift into another Stance/Form and run '/padwake bars' to populate that form's ZR diamond too.")
+        end
+        if skippedOccupied > 0 then
+            printMsg(string.format("Kept %d existing occupied slot(s) (--fill mode).", skippedOccupied))
+        end
+        return placed
+    end
+
+    -- Classic desktop UI (InputDeviceInterfaceStyle = 0)
+    local barOrder = { "base", "shift", "ctrl", "both", "bonus1", "bonus2", "bonus3" }
 
     for _, barKey in ipairs(barOrder) do
         local barSpec = profile.bars[barKey]
@@ -835,7 +961,6 @@ local function populateBars(token, fillOnly)
         if barSpec and offset ~= nil then
             local isBonus = (barKey == "bonus1" or barKey == "bonus2" or barKey == "bonus3")
             local usedSet = isBonus and {} or usedMain
-            local barCount = 0
 
             for slotIdx = 1, 8 do
                 local candidates = barSpec[slotIdx]
@@ -853,9 +978,7 @@ local function populateBars(token, fillOnly)
                                     ClearCursor()
                                     usedSet[normKey] = true
                                     placed = placed + 1
-                                    barCount = barCount + 1
                                     if barKey == "base" and slotIdx <= 4 then
-                                        local btnNames = { "B", "A", "Y", "X" }
                                         table.insert(summaryParts, btnNames[slotIdx] .. "=" .. tostring(label))
                                     end
                                     break
@@ -881,35 +1004,157 @@ local function populateBars(token, fillOnly)
     return placed
 end
 
+local function runInspect()
+    PadWakeProfilesCharDB = PadWakeProfilesCharDB or {}
+    local dump = {
+        level = UnitLevel("player") or 1,
+        class = select(2, UnitClass("player")) or "?",
+        inputStyle = GetCVar and GetCVar("InputDeviceInterfaceStyle") or "nil",
+        slots = {},
+        mouse = {},
+        frames = {},
+        apis = {},
+    }
+
+    -- 1. Scan action slots 1..300
+    for s = 1, 300 do
+        local actionType, id = GetActionInfo(s)
+        if actionType then
+            local name = tostring(actionType) .. ":" .. tostring(id)
+            if actionType == "spell" and id then
+                local sp = (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id))
+                    or (GetSpellInfo and GetSpellInfo(id))
+                name = "spell:" .. tostring(sp or id)
+            elseif actionType == "macro" and id then
+                local m = GetMacroInfo and GetMacroInfo(id)
+                name = "macro:" .. tostring(m or id)
+            elseif actionType == "item" and id then
+                local itemName = (C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(id))
+                    or (GetItemInfo and GetItemInfo(id))
+                name = "item:" .. tostring(itemName or id)
+            end
+            dump.slots[s] = name
+        end
+    end
+
+    -- 2. Inspect hovered frame + parent chain
+    local focus = (GetMouseFoci and GetMouseFoci()[1]) or (GetMouseFocus and GetMouseFocus())
+    local cur = focus
+    local depth = 0
+    while cur and depth < 5 do
+        depth = depth + 1
+        local info = {
+            name = cur.GetName and cur:GetName() or "(unnamed)",
+            objType = cur.GetObjectType and cur:GetObjectType() or "?",
+            keys = {},
+            attrs = {},
+        }
+        for k, v in pairs(cur) do
+            if type(k) == "string" and (type(v) == "number" or type(v) == "string" or type(v) == "boolean") then
+                info.keys[k] = v
+            end
+        end
+        if cur.GetAttribute then
+            for _, attr in ipairs({ "action", "type", "spell", "macro", "binding", "slot", "index", "button" }) do
+                local av = cur:GetAttribute(attr)
+                if av ~= nil then
+                    info.attrs[attr] = tostring(av)
+                end
+            end
+        end
+        dump.mouse[depth] = info
+        cur = cur.GetParent and cur:GetParent() or nil
+    end
+
+    -- 3. Find visible frames with action/gamepad/crossbar-like names or keys
+    local f = EnumerateFrames and EnumerateFrames()
+    local frameCount = 0
+    while f and frameCount < 120 do
+        if f.IsVisible and f:IsVisible() then
+            local nm = f.GetName and f:GetName() or ""
+            local pnm = (f.GetParent and f:GetParent() and f:GetParent().GetName and f:GetParent():GetName()) or ""
+            local lnm = string.lower(nm .. " " .. pnm)
+            if string.find(lnm, "pad") or string.find(lnm, "cross") or string.find(lnm, "action") or string.find(lnm, "controller") or string.find(lnm, "bar") then
+                local act = f.action or f.actionID or f.slot or (f.GetAttribute and f:GetAttribute("action"))
+                if act ~= nil or string.find(lnm, "pad") or string.find(lnm, "cross") or string.find(lnm, "controller") then
+                    frameCount = frameCount + 1
+                    dump.frames[frameCount] = string.format("%s (parent=%s, act=%s, id=%s)",
+                        nm ~= "" and nm or "(unnamed)", pnm, tostring(act), tostring(f.GetID and f:GetID()))
+                end
+            end
+        end
+        f = EnumerateFrames(f)
+    end
+
+    -- 4. List relevant global C_ namespaces
+    for k, v in pairs(_G) do
+        if type(k) == "string" and type(v) == "table" and string.sub(k, 1, 2) == "C_" then
+            local lk = string.lower(k)
+            if string.find(lk, "pad") or string.find(lk, "action") or string.find(lk, "input") or string.find(lk, "bar") or string.find(lk, "bind") then
+                local fns = {}
+                for fk, fv in pairs(v) do
+                    if type(fv) == "function" then table.insert(fns, fk) end
+                end
+                table.sort(fns)
+                dump.apis[k] = table.concat(fns, ", ")
+            end
+        end
+    end
+
+    PadWakeProfilesCharDB.inspect = dump
+    local slotCount = 0
+    for _ in pairs(dump.slots) do slotCount = slotCount + 1 end
+    printMsg(string.format("Inspect saved! Found %d populated action slots & %d UI frames. Hover frame: %s. Now run '/reload' so it writes to disk.",
+        slotCount, frameCount, dump.mouse[1] and dump.mouse[1].name or "none"))
+end
+
+local function describeSlot(slot)
+    local actionType, id = GetActionInfo(slot)
+    if not actionType then return "(empty)" end
+    if actionType == "spell" and id then
+        local spName = (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id))
+            or (GetSpellInfo and GetSpellInfo(id))
+        return spName or ("spell:" .. tostring(id))
+    elseif actionType == "macro" and id then
+        local mName = GetMacroInfo and GetMacroInfo(id)
+        return "macro:" .. tostring(mName or id)
+    elseif actionType == "item" and id then
+        local iName = (C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(id))
+            or (GetItemInfo and GetItemInfo(id))
+        return tostring(iName or ("item:" .. tostring(id)))
+    end
+    return tostring(actionType)
+end
+
 local function printSlotDiagnostics()
+    local level = UnitLevel("player") or 1
+    local _, cls = UnitClass("player")
+    if isForeverGamepadUI() then
+        printMsg(string.format("Forever Crossbar slots — Level %d %s (InputDeviceInterfaceStyle=1):", level, tostring(cls or "?")))
+        local labels = { "B", "A", "Y", "X" }
+        for _, barKey in ipairs({ "right", "left", "bottom" }) do
+            local items = {}
+            for i = 1, 4 do
+                local s = getForeverActionSlot(barKey, i)
+                table.insert(items, labels[i] .. "(" .. tostring(s) .. ")=" .. describeSlot(s))
+            end
+            printMsg("  " .. FOREVER_BARS[barKey].label .. ": " .. table.concat(items, ", "))
+        end
+        return
+    end
+
     local groups = {
         { label = "Base (1-4 B/A/Y/X)", offset = 0, count = 4 },
         { label = "ZL/SHIFT (61-64)",   offset = 60, count = 4 },
         { label = "ZR/CTRL (49-52)",    offset = 48, count = 4 },
         { label = "Bonus1 (73-76)",     offset = 72, count = 4 },
     }
-    local level = UnitLevel("player") or 1
-    local _, cls = UnitClass("player")
-    printMsg(string.format("Slot inspection — Level %d %s:", level, tostring(cls or "?")))
+    printMsg(string.format("Desktop slots — Level %d %s:", level, tostring(cls or "?")))
     for _, g in ipairs(groups) do
         local items = {}
         for i = 1, g.count do
             local slot = g.offset + i
-            local actionType, id = GetActionInfo(slot)
-            local name = "(empty)"
-            if actionType == "spell" and id then
-                local spName = (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id))
-                    or (GetSpellInfo and GetSpellInfo(id))
-                name = spName or ("spell:" .. tostring(id))
-            elseif actionType == "macro" and id then
-                local mName = GetMacroInfo and GetMacroInfo(id)
-                name = "macro:" .. tostring(mName or id)
-            elseif actionType == "item" and id then
-                name = "item:" .. tostring(id)
-            elseif actionType then
-                name = tostring(actionType)
-            end
-            table.insert(items, tostring(slot) .. "=" .. name)
+            table.insert(items, tostring(slot) .. "=" .. describeSlot(slot))
         end
         printMsg("  " .. g.label .. ": " .. table.concat(items, ", "))
     end
@@ -997,14 +1242,28 @@ local function applyBindings(token, forceBindings)
     end
 
     local profile = CLASS_PROFILES[token]
-    for _, pair in ipairs(BASE_BINDINGS) do
-        SetBinding(pair[1], pair[2])
-    end
-    if profile.extraBindings then
-        for _, pair in ipairs(profile.extraBindings) do
+    if isForeverGamepadUI() and not forceBindings then
+        -- Let WoW: Forever's native Controller UI manage ZL/ZR/ZL+ZR crossbar triggers & face buttons,
+        -- clearing any stale desktop PAD1..4 overrides and binding only our rear paddles + C button.
+        for _, pair in ipairs(BASE_BINDINGS) do
+            if not string.find(pair[1], "PADPADDLE") then
+                SetBinding(pair[1])
+            end
+        end
+        SetBinding("PADPADDLE3", "TOGGLEWORLDMAP")
+        SetBinding("SHIFT-PADPADDLE3", "OPENALLBAGS")
+        SetBinding("CTRL-PADPADDLE3", "TOGGLECHARACTER0")
+    else
+        for _, pair in ipairs(BASE_BINDINGS) do
             SetBinding(pair[1], pair[2])
         end
+        if profile.extraBindings then
+            for _, pair in ipairs(profile.extraBindings) do
+                SetBinding(pair[1], pair[2])
+            end
+        end
     end
+
     for _, pair in ipairs(profile.paddles) do
         if SetBindingMacro then
             SetBindingMacro(pair[1], pair[2])
@@ -1014,7 +1273,11 @@ local function applyBindings(token, forceBindings)
     end
 
     SaveBindings(GetCurrentBindingSet())
-    printMsg(string.format("Saved native PAD* + rear-paddle bindings for %s.", profile.name))
+    if isForeverGamepadUI() and not forceBindings then
+        printMsg(string.format("Saved Forever Controller UI rear-paddle bindings (GR/GL/C) for %s.", profile.name))
+    else
+        printMsg(string.format("Saved native PAD* + rear-paddle bindings for %s.", profile.name))
+    end
     return true
 end
 
@@ -1043,9 +1306,10 @@ end
 local function printHelp()
     local _, playerClass = UnitClass("player")
     local level = UnitLevel("player") or 1
-    local cpState = isConsolePortLoaded() and "Loaded (bindings preserved)" or "Not loaded (native C_GamePad)"
-    printMsg(string.format("WoW: Forever Profiles v1.1.0 | Level %d %s | Preset: %s | ConsolePort: %s",
-        level, tostring(playerClass or "?"), tostring(ns.selectedPreset or "AUTO"), cpState))
+    local uiMode = isConsolePortLoaded() and "ConsolePort"
+        or (isForeverGamepadUI() and "Forever Crossbar UI" or "Desktop UI")
+    printMsg(string.format("WoW: Forever Profiles v1.2.0 | Level %d %s | Preset: %s | Mode: %s",
+        level, tostring(playerClass or "?"), tostring(ns.selectedPreset or "AUTO"), uiMode))
     printMsg("Commands:")
     printMsg("  /padwake apply [class] [--keep-bars] [--force-bindings]  Full setup: CVars, macros, bindings & level-aware bars")
     printMsg("  /padwake bars [class] [--fill]                           Auto-assign your best known skills for your current level")
@@ -1089,6 +1353,9 @@ local function handleSlash(msg)
         return
     elseif sub == "slots" then
         printSlotDiagnostics()
+        return
+    elseif sub == "inspect" then
+        runInspect()
         return
     end
 

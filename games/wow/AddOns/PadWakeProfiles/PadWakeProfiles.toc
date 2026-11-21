@@ -2,7 +2,7 @@
 ## Title: PadWake Profiles
 ## Notes: Level-aware World of Warcraft: Forever controller CVars, native PAD* bindings, starter macros, and auto-populated action bars for all 9 classes.
 ## Author: PadWake Contributors
-## Version: 1.1.0
+## Version: 1.2.0
 ## SavedVariablesPerCharacter: PadWakeProfilesCharDB
 
 SelectedPreset.lua
