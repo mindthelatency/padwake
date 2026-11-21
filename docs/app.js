@@ -10,6 +10,7 @@
   const stickL = document.getElementById("stick-l");
   const stickR = document.getElementById("stick-r");
   const readout = document.getElementById("tester-readout");
+  const visualBtns = document.querySelectorAll("[data-btn]");
 
   let activeLed = 1;
   let wakeTimer = null;
@@ -32,10 +33,14 @@
       statusDot.className = "status-dot waking";
       statusLabel.textContent = "Sending USB handshake…";
 
-      // Little playful stick wiggle during wake preview
+      // Playful stick & GL/A preview pulse during wake demo
       stickL.style.transform = "translate(-20%, -75%)";
       stickR.style.transform = "translate(-80%, -25%)";
-      readout.textContent = "USB_INIT ACK (03 01 00 0d …) · Player " + activeLed + " LED set";
+      visualBtns.forEach((el) => {
+        const idx = Number(el.dataset.btn);
+        el.classList.toggle("pressed", idx === 1 || idx === 19);
+      });
+      readout.textContent = "USB_INIT ACK · Player " + activeLed + " LED · GL + A ready";
       readout.classList.add("active");
 
       wakeTimer = setTimeout(() => {
@@ -45,12 +50,19 @@
         statusLabel.textContent = "Awake & Streaming";
         stickL.style.transform = "translate(-50%, -50%)";
         stickR.style.transform = "translate(-50%, -50%)";
+        visualBtns.forEach((el) => el.classList.remove("pressed"));
       }, 650);
     });
   }
 
   // --- Optional Live Web Gamepad API Hook ---
-  // If the visitor actually has their woken gamepad connected, animate the preview live!
+  // If the visitor actually has their woken Switch 2 controller connected, animate the preview live!
+  const BTN_NAMES = [
+    "B", "A", "Y", "X", "R", "ZR", "+", "R3",
+    "Down", "Right", "Left", "Up", "L", "ZL", "-", "L3",
+    "Home", "Capture", "GR", "GL", "C"
+  ];
+
   let polling = false;
   function pollGamepad() {
     const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
@@ -64,13 +76,21 @@
     const rx = gp.axes[2] || 0;
     const ry = gp.axes[3] || 0;
 
-    stickL.style.transform = `translate(calc(-50% + ${(lx * 15).toFixed(1)}px), calc(-50% + ${(ly * 15).toFixed(1)}px))`;
-    stickR.style.transform = `translate(calc(-50% + ${(rx * 15).toFixed(1)}px), calc(-50% + ${(ry * 15).toFixed(1)}px))`;
+    stickL.style.transform = `translate(calc(-50% + ${(lx * 13).toFixed(1)}px), calc(-50% + ${(ly * 13).toFixed(1)}px))`;
+    stickR.style.transform = `translate(calc(-50% + ${(rx * 13).toFixed(1)}px), calc(-50% + ${(ry * 13).toFixed(1)}px))`;
 
     const pressed = [];
+    const pressedSet = new Set();
     gp.buttons.forEach((b, i) => {
-      if (b.pressed) pressed.push("b" + i);
+      if (b.pressed) {
+        pressed.push(BTN_NAMES[i] || ("b" + i));
+        pressedSet.add(i);
+      }
     });
+    visualBtns.forEach((el) => {
+      el.classList.toggle("pressed", pressedSet.has(Number(el.dataset.btn)));
+    });
+
     if (pressed.length > 0) {
       readout.textContent = "Live HID: " + pressed.join(" · ");
       readout.classList.add("active");
@@ -78,7 +98,7 @@
       readout.textContent = `Live HID: L(${lx.toFixed(2)}, ${ly.toFixed(2)}) R(${rx.toFixed(2)}, ${ry.toFixed(2)})`;
       readout.classList.add("active");
     } else {
-      readout.textContent = "Gamepad connected — press any button or move sticks";
+      readout.textContent = "Switch 2 controller connected — press any button or paddle";
       readout.classList.remove("active");
     }
     requestAnimationFrame(pollGamepad);
@@ -96,8 +116,8 @@
   // --- Install Method Tabs & Copy Button ---
   const SNIPPETS = {
     app: `git clone https://github.com/mindthelatency/padwake.git\ncd padwake\nmake install-app`,
-    cli: `make\n./bin/padwake enable\nmake install-daemon`,
-    release: `DEVELOPER_ID="Developer ID Application: Your Name (TEAMID)" \\\nNOTARY_PROFILE="padwake-notary" \\\nmake release`
+    wow: `/padwake apply\n# Later after leveling up or learning spells:\n/padwake bars`,
+    cli: `make\n./bin/padwake enable\nmake install-wow`
   };
 
   const tabBtns = document.querySelectorAll(".tab-btn");
