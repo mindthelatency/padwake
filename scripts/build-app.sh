@@ -61,9 +61,9 @@ if [[ -f "$REPO_DIR/assets/logo.png" ]]; then
     "$REPO_DIR/scripts/make-icns.sh" "$REPO_DIR/assets/logo.png" "$RES_DIR/AppIcon.icns"
 fi
 
-# Bundle mapping templates (brand-clean filenames)
-cp "$REPO_DIR/wow/gamecontrollerdb_padwake.txt" "$RES_DIR/gamecontrollerdb_padwake.txt"
-cp "$REPO_DIR/wow/GamePadConfig_PadWake.json"   "$RES_DIR/GamePadConfig_PadWake.json"
+# Bundle game mapping templates under Resources/games/ (supports multiple games)
+rm -rf "$RES_DIR/games" "$RES_DIR/gamecontrollerdb_padwake.txt" "$RES_DIR/GamePadConfig_PadWake.json"
+cp -R "$REPO_DIR/games" "$RES_DIR/games"
 
 # Ad-hoc sign by default so the app runs cleanly locally without a Developer ID cert
 if [[ "${SKIP_ADHOC_SIGN:-0}" != "1" ]]; then

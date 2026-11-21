@@ -145,7 +145,7 @@ In *World of Warcraft*, you can verify device detection in chat with:
 <details>
 <summary><strong>Up/down analog stick movement feels inverted</strong></summary>
 
-Remove the `~` from `lefty:a1~` / `righty:a3~` in [wow/gamecontrollerdb_padwake.txt](wow/gamecontrollerdb_padwake.txt) (or add `"scale": -1` to `LStickY` / `RStickY` in [wow/GamePadConfig_PadWake.json](wow/GamePadConfig_PadWake.json)), then reinstall the profile.
+Remove the `~` from `lefty:a1~` / `righty:a3~` in [games/sdl2/gamecontrollerdb_padwake.txt](games/sdl2/gamecontrollerdb_padwake.txt) (or add `"scale": -1` to `LStickY` / `RStickY` in [games/wow/GamePadConfig_PadWake.json](games/wow/GamePadConfig_PadWake.json)), then reinstall the profile.
 
 </details>
 

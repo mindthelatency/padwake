@@ -22,6 +22,7 @@ struct GameProfile: Identifiable {
     let subtitle: String
     let filesSummary: String
     let kind: GameProfileKind
+    let resourceDir: String
     let panelTitle: String
     let panelMessage: String
     let defaultSearchPath: String
@@ -33,6 +34,7 @@ struct GameProfile: Identifiable {
             subtitle: "Classic Era / Forever, Classic & Retail",
             filesSummary: "gamecontrollerdb.txt · GamePadConfig_PadWake.json · Config.wtf",
             kind: .wowWTF,
+            resourceDir: "games/wow",
             panelTitle: "Select World of Warcraft WTF Folder",
             panelMessage: "Choose a WTF folder (e.g. _forever_/WTF, _classic_/WTF, or _retail_/WTF) to install PadWake's SDL2 & GamePad mappings.",
             defaultSearchPath: "/Applications/World of Warcraft"
@@ -43,6 +45,7 @@ struct GameProfile: Identifiable {
             subtitle: "Any game reading gamecontrollerdb.txt",
             filesSummary: "gamecontrollerdb.txt (057E:2069 mapping)",
             kind: .genericSDL2,
+            resourceDir: "games/sdl2",
             panelTitle: "Select Game Folder",
             panelMessage: "Choose the folder where your game loads gamecontrollerdb.txt.",
             defaultSearchPath: "/Applications"
@@ -351,7 +354,12 @@ final class PadWakeModel: ObservableObject {
         var state = profileStates[profile.id] ?? ProfileStatusState()
 
         do {
-            guard let dbRes = Bundle.main.url(forResource: "gamecontrollerdb_padwake", withExtension: "txt") else {
+            let dbRes = Bundle.main.url(
+                forResource: "gamecontrollerdb_padwake", withExtension: "txt", subdirectory: profile.resourceDir
+            ) ?? Bundle.main.url(
+                forResource: "gamecontrollerdb_padwake", withExtension: "txt", subdirectory: "games/sdl2"
+            )
+            guard let dbRes else {
                 state.lastResult = "Bundled SDL2 mapping template missing."
                 state.lastResultIsError = true
                 profileStates[profile.id] = state
@@ -381,7 +389,9 @@ final class PadWakeModel: ObservableObject {
 
             // 2. WoW-specific config files
             if profile.kind == .wowWTF {
-                guard let jsonRes = Bundle.main.url(forResource: "GamePadConfig_PadWake", withExtension: "json") else {
+                guard let jsonRes = Bundle.main.url(
+                    forResource: "GamePadConfig_PadWake", withExtension: "json", subdirectory: profile.resourceDir
+                ) else {
                     state.lastResult = "Bundled GamePadConfig JSON missing."
                     state.lastResultIsError = true
                     profileStates[profile.id] = state
