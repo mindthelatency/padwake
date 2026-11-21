@@ -68,7 +68,7 @@ struct ProfileStatusState {
 @MainActor
 final class PadWakeModel: ObservableObject {
     static let shared = PadWakeModel()
-    private static let primaryGUID = "030000007e0500006920000001020000"
+    nonisolated private static let primaryGUID = "030000007e0500006920000001020000"
 
     @Published var status: pw_status_t = PW_STATUS_DISCONNECTED
     @Published var playerLED: Int {
@@ -76,7 +76,7 @@ final class PadWakeModel: ObservableObject {
             UserDefaults.standard.set(playerLED, forKey: "playerLED")
             let mask = UInt8(1 << max(0, min(3, playerLED - 1)))
             pw_watcher_set_led_mask(mask)
-            DispatchQueue.global(qos: .userInitiated).async {
+            usbQueue.async {
                 _ = pw_set_led_all(mask)
             }
         }
@@ -110,6 +110,8 @@ final class PadWakeModel: ObservableObject {
     )
     @Published var infoMessage: String?
 
+    private let usbQueue = DispatchQueue(label: "com.padwake.usb", qos: .userInitiated)
+    private let ioQueue = DispatchQueue(label: "com.padwake.io", qos: .utility)
     private var watcherStarted = false
     private var monitorActive = false
 
@@ -117,7 +119,7 @@ final class PadWakeModel: ObservableObject {
         profileStates.values.reduce(0) { $0 + $1.installedCount }
     }
 
-    init() {
+    private init() {
         let savedLED = UserDefaults.standard.integer(forKey: "playerLED")
         self.playerLED = (1...4).contains(savedLED) ? savedLED : 1
 
@@ -134,17 +136,21 @@ final class PadWakeModel: ObservableObject {
             applyMFiEnvSetting(enabled: true)
         }
         guard !watcherStarted else { return }
-        watcherStarted = true
 
         let mask = UInt8(1 << max(0, min(3, playerLED - 1)))
         let ctx = Unmanaged.passUnretained(self).toOpaque()
-        _ = pw_watcher_start(mask, { newStatus, rawCtx in
+        let started = pw_watcher_start(mask, { newStatus, rawCtx in
             guard let rawCtx else { return }
             let model = Unmanaged<PadWakeModel>.fromOpaque(rawCtx).takeUnretainedValue()
             Task { @MainActor in
                 model.status = newStatus
             }
         }, ctx)
+        if started {
+            watcherStarted = true
+        } else {
+            infoMessage = "Failed to start USB hotplug watcher."
+        }
     }
 
     func stop() {
@@ -158,7 +164,7 @@ final class PadWakeModel: ObservableObject {
     func wakeNow() {
         let mask = UInt8(1 << max(0, min(3, playerLED - 1)))
         infoMessage = "Sending USB wake handshake…"
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        usbQueue.async { [weak self] in
             let woken = pw_wake_all(mask)
             usleep(100_000)
             let st = pw_probe_status(0.5)
@@ -177,7 +183,7 @@ final class PadWakeModel: ObservableObject {
     }
 
     func refreshStatus() {
-        DispatchQueue.global(qos: .utility).async { [weak self] in
+        usbQueue.async { [weak self] in
             let st = pw_probe_status(0.35)
             Task { @MainActor in
                 guard let self else { return }
@@ -203,9 +209,8 @@ final class PadWakeModel: ObservableObject {
 
     func startHIDMonitor() {
         guard !monitorActive else { return }
-        monitorActive = true
         let ctx = Unmanaged.passUnretained(self).toOpaque()
-        _ = pw_hid_monitor_start({ newState, rawCtx in
+        let started = pw_hid_monitor_start({ newState, rawCtx in
             guard let rawCtx else { return }
             let model = Unmanaged<PadWakeModel>.fromOpaque(rawCtx).takeUnretainedValue()
             Task { @MainActor in
@@ -215,6 +220,11 @@ final class PadWakeModel: ObservableObject {
                 }
             }
         }, ctx)
+        if started {
+            monitorActive = true
+        } else {
+            infoMessage = "Failed to start live HID monitor."
+        }
     }
 
     func stopHIDMonitor() {
@@ -241,11 +251,29 @@ final class PadWakeModel: ObservableObject {
         }
     }
 
-    private func checkInstalled(profile: GameProfile, folder: URL) -> Bool {
+    nonisolated private static func readTextPreservingEncoding(at url: URL) throws -> String {
+        do {
+            return try String(contentsOf: url, encoding: .utf8)
+        } catch {
+            return try String(contentsOf: url, encoding: .isoLatin1)
+        }
+    }
+
+    nonisolated private static func containsMapping(guid: String, in text: String) -> Bool {
+        let prefix = "\(guid),"
+        for line in text.split(omittingEmptySubsequences: true, whereSeparator: \.isNewline) {
+            let trimmed = line.drop(while: { $0 == " " || $0 == "\t" })
+            if trimmed.hasPrefix("#") { continue }
+            if trimmed.hasPrefix(prefix) { return true }
+        }
+        return false
+    }
+
+    nonisolated private static func checkInstalled(profile: GameProfile, folder: URL) -> Bool {
         let fm = FileManager.default
         let dbURL = folder.appendingPathComponent("gamecontrollerdb.txt")
-        guard let dbText = try? String(contentsOf: dbURL, encoding: .utf8),
-              dbText.contains("\(Self.primaryGUID),") else {
+        guard let dbText = try? readTextPreservingEncoding(at: dbURL),
+              containsMapping(guid: primaryGUID, in: dbText) else {
             return false
         }
         switch profile.kind {
@@ -257,7 +285,7 @@ final class PadWakeModel: ObservableObject {
         }
     }
 
-    private func displayLabel(for folder: URL, kind: GameProfileKind) -> String {
+    nonisolated private static func displayLabel(for folder: URL, kind: GameProfileKind) -> String {
         switch kind {
         case .wowWTF:
             let name = folder.lastPathComponent
@@ -272,47 +300,62 @@ final class PadWakeModel: ObservableObject {
     }
 
     func refreshProfileStatuses() {
-        let fm = FileManager.default
-        for profile in GameProfile.all {
-            var seen = Set<String>()
-            var targets: [DetectedTarget] = []
+        let savedSnapshot: [String: [String]] = Dictionary(
+            uniqueKeysWithValues: GameProfile.all.map { ($0.id, savedPaths(for: $0.id)) }
+        )
 
-            func appendIfDir(_ path: String) {
-                let normalized = URL(fileURLWithPath: path).standardizedFileURL.path
-                guard !seen.contains(normalized) else { return }
-                var isDir: ObjCBool = false
-                guard fm.fileExists(atPath: normalized, isDirectory: &isDir), isDir.boolValue else { return }
-                seen.insert(normalized)
-                let url = URL(fileURLWithPath: normalized)
-                targets.append(DetectedTarget(
-                    label: displayLabel(for: url, kind: profile.kind),
-                    path: normalized,
-                    isInstalled: checkInstalled(profile: profile, folder: url)
-                ))
-            }
+        ioQueue.async { [weak self] in
+            let fm = FileManager.default
+            var scanned: [String: [DetectedTarget]] = [:]
 
-            // Auto-detect standard WoW flavors under /Applications/World of Warcraft/*/WTF
-            if profile.kind == .wowWTF {
-                let wowBase = URL(fileURLWithPath: profile.defaultSearchPath)
-                if let entries = try? fm.contentsOfDirectory(
-                    at: wowBase, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]
-                ) {
-                    let sorted = entries.sorted { $0.lastPathComponent < $1.lastPathComponent }
-                    for entry in sorted {
-                        let wtf = entry.appendingPathComponent("WTF")
-                        appendIfDir(wtf.path)
+            for profile in GameProfile.all {
+                var seen = Set<String>()
+                var targets: [DetectedTarget] = []
+
+                func appendIfDir(_ path: String) {
+                    let normalized = URL(fileURLWithPath: path).standardizedFileURL.path
+                    guard !seen.contains(normalized) else { return }
+                    var isDir: ObjCBool = false
+                    guard fm.fileExists(atPath: normalized, isDirectory: &isDir), isDir.boolValue else { return }
+                    seen.insert(normalized)
+                    let url = URL(fileURLWithPath: normalized)
+                    targets.append(DetectedTarget(
+                        label: Self.displayLabel(for: url, kind: profile.kind),
+                        path: normalized,
+                        isInstalled: Self.checkInstalled(profile: profile, folder: url)
+                    ))
+                }
+
+                // Auto-detect standard WoW flavors under /Applications/World of Warcraft/*/WTF
+                if profile.kind == .wowWTF {
+                    let wowBase = URL(fileURLWithPath: profile.defaultSearchPath)
+                    if let entries = try? fm.contentsOfDirectory(
+                        at: wowBase, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]
+                    ) {
+                        let sorted = entries.sorted { $0.lastPathComponent < $1.lastPathComponent }
+                        for entry in sorted {
+                            let wtf = entry.appendingPathComponent("WTF")
+                            appendIfDir(wtf.path)
+                        }
                     }
                 }
+
+                // Include any user-selected custom paths saved previously
+                for saved in savedSnapshot[profile.id] ?? [] {
+                    appendIfDir(saved)
+                }
+
+                scanned[profile.id] = targets
             }
 
-            // Include any user-selected custom paths saved previously
-            for saved in savedPaths(for: profile.id) {
-                appendIfDir(saved)
+            Task { @MainActor in
+                guard let self else { return }
+                for (profileID, targets) in scanned {
+                    var existing = self.profileStates[profileID] ?? ProfileStatusState()
+                    existing.targets = targets
+                    self.profileStates[profileID] = existing
+                }
             }
-
-            var existing = profileStates[profile.id] ?? ProfileStatusState()
-            existing.targets = targets
-            profileStates[profile.id] = existing
         }
     }
 
@@ -354,6 +397,14 @@ final class PadWakeModel: ObservableObject {
         var state = profileStates[profile.id] ?? ProfileStatusState()
 
         do {
+            var isDir: ObjCBool = false
+            guard fm.fileExists(atPath: folder.path, isDirectory: &isDir), isDir.boolValue else {
+                state.lastResult = "Selected target is not an accessible directory."
+                state.lastResultIsError = true
+                profileStates[profile.id] = state
+                return
+            }
+
             let dbRes = Bundle.main.url(
                 forResource: "gamecontrollerdb_padwake", withExtension: "txt", subdirectory: profile.resourceDir
             ) ?? Bundle.main.url(
@@ -368,23 +419,31 @@ final class PadWakeModel: ObservableObject {
 
             var actions: [String] = []
 
-            // 1. Append SDL2 mapping lines idempotently into gamecontrollerdb.txt
+            // 1. Append SDL2 mapping lines idempotently into gamecontrollerdb.txt without clobbering existing data
             let dbDst = folder.appendingPathComponent("gamecontrollerdb.txt")
             let templateLines = try String(contentsOf: dbRes, encoding: .utf8)
                 .components(separatedBy: .newlines)
                 .filter { !$0.isEmpty && !$0.hasPrefix("#") }
 
-            var existing = (try? String(contentsOf: dbDst, encoding: .utf8)) ?? "# SDL2 Game Controller Mappings File\n"
+            var existing: String
+            if fm.fileExists(atPath: dbDst.path) {
+                existing = try Self.readTextPreservingEncoding(at: dbDst)
+            } else {
+                existing = "# SDL2 Game Controller Mappings File\n"
+            }
+
             var added = 0
             for line in templateLines {
                 let guid = line.split(separator: ",").first.map(String.init) ?? line
-                if !existing.contains("\(guid),") {
+                if !Self.containsMapping(guid: guid, in: existing) {
                     if !existing.hasSuffix("\n") { existing += "\n" }
                     existing += "\n\(line)\n"
                     added += 1
                 }
             }
-            try existing.write(to: dbDst, atomically: true, encoding: .utf8)
+            if added > 0 || !fm.fileExists(atPath: dbDst.path) {
+                try existing.write(to: dbDst, atomically: true, encoding: .utf8)
+            }
             actions.append(added > 0 ? "gamecontrollerdb.txt (+\(added))" : "gamecontrollerdb.txt (up to date)")
 
             // 2. WoW-specific config files
@@ -398,15 +457,13 @@ final class PadWakeModel: ObservableObject {
                     return
                 }
                 let jsonDst = folder.appendingPathComponent("GamePadConfig_PadWake.json")
-                if fm.fileExists(atPath: jsonDst.path) {
-                    try fm.removeItem(at: jsonDst)
-                }
-                try fm.copyItem(at: jsonRes, to: jsonDst)
+                let jsonData = try Data(contentsOf: jsonRes)
+                try jsonData.write(to: jsonDst, options: [.atomic])
                 actions.append("GamePadConfig_PadWake.json")
 
                 let cfgDst = folder.appendingPathComponent("Config.wtf")
                 if fm.fileExists(atPath: cfgDst.path) {
-                    var cfg = try String(contentsOf: cfgDst, encoding: .utf8)
+                    var cfg = try Self.readTextPreservingEncoding(at: cfgDst)
                     if !cfg.contains("SET GamePadEnable ") {
                         if !cfg.hasSuffix("\n") { cfg += "\n" }
                         cfg += "SET GamePadEnable \"1\"\n"
@@ -417,7 +474,7 @@ final class PadWakeModel: ObservableObject {
             }
 
             rememberPath(folder.standardizedFileURL.path, for: profile.id)
-            let label = displayLabel(for: folder, kind: profile.kind)
+            let label = Self.displayLabel(for: folder, kind: profile.kind)
             state.lastResult = "\(label): " + actions.joined(separator: ", ")
             state.lastResultIsError = false
             profileStates[profile.id] = state
@@ -432,12 +489,32 @@ final class PadWakeModel: ObservableObject {
     }
 
     private func applyMFiEnvSetting(enabled: Bool) {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-        task.arguments = enabled
+        let args = enabled
             ? ["setenv", "SDL_JOYSTICK_MFI", "0"]
             : ["unsetenv", "SDL_JOYSTICK_MFI"]
-        try? task.run()
+        ioQueue.async { [weak self] in
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+            task.arguments = args
+            task.standardInput = FileHandle.nullDevice
+            task.standardOutput = FileHandle.nullDevice
+            task.standardError = FileHandle.nullDevice
+            do {
+                try task.run()
+                task.waitUntilExit()
+                if task.terminationStatus != 0 {
+                    let status = task.terminationStatus
+                    Task { @MainActor in
+                        self?.infoMessage = "launchctl exited with status \(status) updating SDL_JOYSTICK_MFI."
+                    }
+                }
+            } catch {
+                let msg = error.localizedDescription
+                Task { @MainActor in
+                    self?.infoMessage = "Failed to update SDL_JOYSTICK_MFI: \(msg)"
+                }
+            }
+        }
     }
 }
 
