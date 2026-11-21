@@ -41,7 +41,7 @@ Plugged a **Nintendo Switch 2 Pro Controller** (`VID 0x057E / PID 0x2069`) into 
 
 - **Automatic USB-C Wake** — Event-driven IOKit hotplug watcher (`~0%` idle CPU) sends the wake handshake whenever the controller is connected.
 - **Fixes macOS's SDL2 Veto** — One-click toggle sets `SDL_JOYSTICK_MFI=0` for your session so SDL2 games actually see the controller.
-- **Built-in Game Profiles** — Auto-detects *World of Warcraft* (`_forever_`, `_classic_`, `_retail_`) `WTF/` folders for 1-click mapping installs, plus a **Generic SDL2** profile for any other game.
+- **Built-in Game Profiles & WoW: Forever Class Presets** — Auto-detects *World of Warcraft* (`_forever_`, `_classic_`, `_retail_`) `WTF/` folders for 1-click installs, includes optimized **9-class WoW: Forever controller profiles** (`PadWakeProfiles` companion addon — Native `C_GamePad` & ConsolePort-aware), plus a **Generic SDL2** profile for any other game.
 - **Player LEDs & Live Input Tester** — Switch `P1`–`P4` LEDs and live-test all **21 buttons** (including rear grip paddles `GL`, `GR`, and `C`) plus both 12-bit analog sticks.
 - **Native macOS Menu-Bar App** — Built with SwiftUI `MenuBarExtra` + pure C11 IOKit, native **Launch at Login** (`SMAppService`), and a right-click menu to wake or quit.
 
@@ -62,8 +62,21 @@ make install-app
 Then finish setup in 10 seconds:
 1. Click the **gamepad icon** in your macOS menu bar.
 2. Check **Launch at Login** so PadWake starts automatically.
-3. Expand **Game Profiles** to install mappings into your game folder (e.g. 1-click install for auto-detected *World of Warcraft* `WTF/` folders).
+3. Expand **Game Profiles** to install mappings into your game folder (e.g. 1-click install for auto-detected *World of Warcraft* `WTF/` folders, with optional class preset selection).
 4. **Restart your game launcher once** so it picks up `SDL_JOYSTICK_MFI=0`.
+5. *(WoW: Forever)* Type `/padwake apply` in-game to apply your class's optimized `C_GamePad` CVars, rear-paddle bindings, and starter macros.
+
+<details>
+<summary><strong>World of Warcraft: Forever — 9-Class Controller Profiles (Native &amp; ConsolePort)</strong></summary>
+
+Installing the **World of Warcraft** profile from `PadWake.app` (or `./scripts/install-wow-forever.sh [--class <name>]`) installs `gamecontrollerdb.txt`, `GamePadConfig_PadWake.json`, and the lightweight `PadWakeProfiles` companion addon into `Interface/AddOns/PadWakeProfiles/`.
+
+- **All 9 classes included:** Warrior, Paladin, Hunter, Rogue, Priest, Shaman, Mage, Warlock, and Druid — see [games/wow/classes/README.md](games/wow/classes/README.md) for the full button, paddle (`GR`/`GL`/`C`), and macro guide.
+- **Cloud-sync safe:** Uses Blizzard's `SetBinding` / `SaveBindings` / `SetCVar` / `CreateMacro` APIs in-game so `synchronizeBindings` never overwrites your setup.
+- **ConsolePort-aware:** Automatically detects if **ConsolePort** is loaded and preserves ConsolePort's `PAD*` bindings while still applying class CVars and `PW_*` starter macros (pass `/padwake apply --force-bindings` to override).
+- **Commands:** `/padwake apply [class]`, `/padwake cvars`, `/padwake macros`, `/padwake info`, `/padwake reset`.
+
+</details>
 
 > **Tip:** Right-click (or Control-click) the menu-bar icon anytime to quickly **Wake Controller** or **Quit PadWake**.
 

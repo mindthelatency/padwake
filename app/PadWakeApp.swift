@@ -9,6 +9,65 @@ enum GameProfileKind: String {
     case genericSDL2
 }
 
+enum WoWClassPreset: String, CaseIterable, Identifiable {
+    case auto
+    case warrior
+    case paladin
+    case hunter
+    case rogue
+    case priest
+    case shaman
+    case mage
+    case warlock
+    case druid
+
+    var id: String { rawValue }
+
+    var luaToken: String {
+        rawValue.uppercased()
+    }
+
+    var displayName: String {
+        switch self {
+        case .auto:    return "Auto-detect in-game"
+        case .warrior: return "Warrior"
+        case .paladin: return "Paladin"
+        case .hunter:  return "Hunter"
+        case .rogue:   return "Rogue"
+        case .priest:  return "Priest"
+        case .shaman:  return "Shaman"
+        case .mage:    return "Mage"
+        case .warlock: return "Warlock"
+        case .druid:   return "Druid"
+        }
+    }
+
+    var paddleSummary: String {
+        switch self {
+        case .auto:
+            return "Auto-detects your logged-in class · run /padwake apply in-game"
+        case .warrior:
+            return "0° turn · GR Pummel/Bash · GL Charge/Intercept · Victory Rush"
+        case .paladin:
+            return "0° turn · SoftFriend · GR HoJ · GL Cleanse · Smart Heal"
+        case .hunter:
+            return "115° kite · GR Feign Death · GL Pet Toggle · Combat Trap"
+        case .rogue:
+            return "0° turn · Stealth mirror · GR Kick · GL Stealth/Vanish"
+        case .priest:
+            return "115° cast · SoftFriend=3 · ZL+D-Pad Party · GR Scream · GL Shield"
+        case .shaman:
+            return "0° turn · SoftFriend · GR Earth Shock · GL Indoor Ghost Wolf"
+        case .mage:
+            return "115° kite · GR Stopcast Counterspell · GL Blink · Ice Block"
+        case .warlock:
+            return "115° cast · GR Stopcast Fear · GL Pet Toggle · Pet Special"
+        case .druid:
+            return "0° turn · SoftFriend · GR Form CC · GL Travel/Cat · Bear/HoT"
+        }
+    }
+}
+
 struct DetectedTarget: Identifiable, Equatable {
     var id: String { path }
     let label: String
@@ -31,12 +90,12 @@ struct GameProfile: Identifiable {
         GameProfile(
             id: "wow-wtf",
             name: "World of Warcraft",
-            subtitle: "Classic Era / Forever, Classic & Retail",
-            filesSummary: "gamecontrollerdb.txt · GamePadConfig_PadWake.json · Config.wtf",
+            subtitle: "Forever (Classic+), Classic & Retail",
+            filesSummary: "gamecontrollerdb.txt · GamePadConfig · PadWakeProfiles addon",
             kind: .wowWTF,
             resourceDir: "games/wow",
             panelTitle: "Select World of Warcraft WTF Folder",
-            panelMessage: "Choose a WTF folder (e.g. _forever_/WTF, _classic_/WTF, or _retail_/WTF) to install PadWake's SDL2 & GamePad mappings.",
+            panelMessage: "Choose a WTF folder (e.g. _forever_/WTF, _classic_/WTF, or _retail_/WTF) to install PadWake's SDL2, GamePad, and class profiles.",
             defaultSearchPath: "/Applications/World of Warcraft"
         ),
         GameProfile(
@@ -105,6 +164,11 @@ final class PadWakeModel: ObservableObject {
         }
     }
     @Published var profileStates: [String: ProfileStatusState] = [:]
+    @Published var selectedWoWClass: WoWClassPreset {
+        didSet {
+            UserDefaults.standard.set(selectedWoWClass.rawValue, forKey: "wowClassPreset")
+        }
+    }
     @Published var inputState = pw_input_state_t(
         connected: false, buttons: 0, lx: 2048, ly: 2048, rx: 2048, ry: 2048, report_count: 0
     )
@@ -127,6 +191,8 @@ final class PadWakeModel: ObservableObject {
             UserDefaults.standard.set(true, forKey: "disableMFiVeto")
         }
         self.disableMFiVeto = UserDefaults.standard.bool(forKey: "disableMFiVeto")
+        let savedClass = UserDefaults.standard.string(forKey: "wowClassPreset") ?? ""
+        self.selectedWoWClass = WoWClassPreset(rawValue: savedClass) ?? .auto
         self.launchAtLogin = (SMAppService.mainApp.status == .enabled)
         refreshProfileStatuses()
     }
@@ -471,6 +537,36 @@ final class PadWakeModel: ObservableObject {
                         actions.append("Config.wtf (GamePadEnable=1)")
                     }
                 }
+
+                // 3. Install/update lightweight PadWakeProfiles companion addon (sibling Interface/AddOns)
+                if let addonSrc = Bundle.main.resourceURL?.appendingPathComponent("games/wow/AddOns/PadWakeProfiles"),
+                   fm.fileExists(atPath: addonSrc.path) {
+                    let flavorRoot = folder.lastPathComponent == "WTF"
+                        ? folder.deletingLastPathComponent()
+                        : folder
+                    let addonDst = flavorRoot
+                        .appendingPathComponent("Interface")
+                        .appendingPathComponent("AddOns")
+                        .appendingPathComponent("PadWakeProfiles")
+                    try fm.createDirectory(at: addonDst, withIntermediateDirectories: true)
+
+                    for fileName in ["PadWakeProfiles.toc", "PadWakeProfiles.lua"] {
+                        let srcFile = addonSrc.appendingPathComponent(fileName)
+                        let dstFile = addonDst.appendingPathComponent(fileName)
+                        let fileData = try Data(contentsOf: srcFile)
+                        try fileData.write(to: dstFile, options: [.atomic])
+                    }
+
+                    // Strictly whitelisted Lua token from WoWClassPreset enum
+                    let presetLua = """
+                    -- Updated automatically by PadWake.app
+                    local _, ns = ...
+                    ns.selectedPreset = "\(selectedWoWClass.luaToken)"
+                    """ + "\n"
+                    let presetDst = addonDst.appendingPathComponent("SelectedPreset.lua")
+                    try presetLua.write(to: presetDst, atomically: true, encoding: .utf8)
+                    actions.append("PadWakeProfiles (\(selectedWoWClass.displayName))")
+                }
             }
 
             rememberPath(folder.standardizedFileURL.path, for: profile.id)
@@ -479,7 +575,11 @@ final class PadWakeModel: ObservableObject {
             state.lastResultIsError = false
             profileStates[profile.id] = state
             refreshProfileStatuses()
-            infoMessage = "Installed \(profile.name) profile into \(label)."
+            if profile.kind == .wowWTF {
+                infoMessage = "Installed into \(label). Run /padwake apply in-game."
+            } else {
+                infoMessage = "Installed \(profile.name) profile into \(label)."
+            }
         } catch {
             state.lastResult = "Install failed: \(error.localizedDescription)"
             state.lastResultIsError = true
@@ -564,6 +664,7 @@ struct StickDotView: View {
 struct GameProfileRowView: View {
     let profile: GameProfile
     let state: ProfileStatusState
+    let wowClassSelection: Binding<WoWClassPreset>?
     let onInstallTarget: (DetectedTarget) -> Void
     let onChooseFolder: () -> Void
 
@@ -594,6 +695,30 @@ struct GameProfileRowView: View {
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if let classBinding = wowClassSelection {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text("Class Preset")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Picker("", selection: classBinding) {
+                            ForEach(WoWClassPreset.allCases) { preset in
+                                Text(preset.displayName).tag(preset)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .controlSize(.mini)
+                    }
+                    Text(classBinding.wrappedValue.paddleSummary)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.top, 2)
+            }
 
             if !state.targets.isEmpty {
                 VStack(spacing: 4) {
@@ -785,6 +910,7 @@ struct PopoverView: View {
                             GameProfileRowView(
                                 profile: profile,
                                 state: st,
+                                wowClassSelection: profile.kind == .wowWTF ? $model.selectedWoWClass : nil,
                                 onInstallTarget: { target in
                                     model.install(profile: profile, into: URL(fileURLWithPath: target.path))
                                 },
