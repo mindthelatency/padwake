@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'" />
-  <title>PadWake — Switch 2 Pro Controller for World of Warcraft: Forever on macOS</title>
-  <meta name="description" content="A tiny, zero-dependency macOS menu-bar utility & WoW: Forever companion addon for the Nintendo Switch 2 Pro Controller (057E:2069) over USB-C." />
+  <title>PadWake — Switch 2 Pro Controller for WoW: Forever on Mac</title>
+  <meta name="description" content="A small Mac menu-bar app that makes the Nintendo Switch 2 Pro Controller work over USB-C in World of Warcraft: Forever." />
   <link rel="icon" type="image/png" href="assets/favicon.png" />
-  <meta property="og:title" content="PadWake — Switch 2 Pro Controller for WoW: Forever on macOS" />
-  <meta property="og:description" content="USB-C wake, SDL2 MFi veto fix, exact Switch 2 X/Y/A/B diamond, GL/GR/C rear paddles, and level- & spec-aware WoW: Forever crossbars." />
+  <meta property="og:title" content="PadWake for Mac" />
+  <meta property="og:description" content="Plug in your Switch 2 Pro Controller over USB-C and play World of Warcraft: Forever on Mac." />
   <meta property="og:image" content="assets/icon.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -20,7 +20,7 @@
         <span class="brand-name">PadWake</span>
       </a>
       <nav class="nav" aria-label="Primary">
-        <a href="#why-padwake">Why PadWake</a>
+        <a href="#what-it-does">What it does</a>
         <a href="#install">Install</a>
         <a href="https://github.com/mindthelatency/padwake" class="nav-github" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true">
@@ -37,34 +37,32 @@
     <section class="hero">
       <div class="container hero-inner">
         <div class="hero-icon-wrap">
-          <img src="assets/icon.png" alt="PadWake app icon — a dark gamepad with a winking cyan face and glowing lightning spark" class="hero-icon" width="128" height="128" />
+          <img src="assets/icon.png" alt="PadWake app icon" class="hero-icon" width="128" height="128" />
         </div>
-        <h1>Switch 2 Pro Controller for WoW: Forever on macOS.</h1>
+        <h1>Use your Switch 2 Pro Controller in WoW: Forever on Mac.</h1>
         <p class="hero-lead">
-          Plug in over USB-C and play. PadWake wakes <code>057E:2069</code>, fixes macOS's SDL2 veto,
-          aligns the Switch 2 <code>X/Y/A/B</code> diamond &amp; <code>GL/GR/C</code> rear paddles, and auto-populates
-          level- &amp; spec-aware crossbars across all 9 classes.
+          Plug in over USB-C and play. PadWake wakes the controller, helps WoW detect it on macOS,
+          matches the X/Y/A/B buttons and rear paddles, and fills your action bars.
         </p>
         <div class="hero-actions">
           <a href="#install" class="btn btn-primary">
             <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M8 2.5v7.5m0 0L4.75 6.75M8 10l3.25-3.25M2.5 13h11"/>
             </svg>
-            Install on macOS
+            Install on Mac
           </a>
-          <a href="https://github.com/mindthelatency/padwake" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+          <a href="https://github.com/mindthelatency/padwake" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
         </div>
         <p class="hero-meta">
-          Universal (Apple Silicon &amp; Intel) <span aria-hidden="true">·</span> macOS 13+ <span aria-hidden="true">·</span> WoW: Forever (<code>_forever_</code>) <span aria-hidden="true">·</span> Zero dependencies
+          macOS 13+ <span aria-hidden="true">·</span> Apple Silicon &amp; Intel <span aria-hidden="true">·</span> Free &amp; open source
         </p>
       </div>
     </section>
 
-    <!-- Interactive Menu Bar Showcase -->
-    <section class="showcase" aria-label="Interactive PadWake menu-bar preview">
+    <!-- Interactive Menu Bar Preview -->
+    <section class="showcase" aria-label="PadWake menu-bar preview">
       <div class="container">
         <div class="mac-stage">
-          <!-- Simulated macOS Menu Bar -->
           <div class="menubar" aria-hidden="true">
             <div class="menubar-left">
               <span class="apple-dot"></span>
@@ -82,20 +80,19 @@
             </div>
           </div>
 
-          <!-- Interactive PadWake Popover -->
           <div class="popover-anchor">
             <div class="popover-caret" aria-hidden="true"></div>
-            <div class="popover" role="region" aria-label="Interactive PadWake app preview">
+            <div class="popover" role="region" aria-label="Interactive PadWake preview">
               <div class="pop-header">
                 <img src="assets/favicon.png" alt="" class="pop-app-icon" width="34" height="34" />
                 <div class="pop-title-group">
                   <div class="pop-title">PadWake</div>
                   <div class="pop-status">
                     <span class="status-dot awake" id="status-dot"></span>
-                    <span id="status-label">Awake &amp; Streaming</span>
+                    <span id="status-label">Connected &amp; Ready</span>
                   </div>
                 </div>
-                <span class="vidpid-pill">057E:2069</span>
+                <span class="vidpid-pill">USB-C</span>
               </div>
 
               <div class="pop-divider"></div>
@@ -108,8 +105,8 @@
               </button>
 
               <div class="pop-row">
-                <span class="pop-label">Player LED</span>
-                <div class="segmented" role="group" aria-label="Player LED">
+                <span class="pop-label">Player Light</span>
+                <div class="segmented" role="group" aria-label="Player Light">
                   <button type="button" class="seg-btn active" data-led="1">P1</button>
                   <button type="button" class="seg-btn" data-led="2">P2</button>
                   <button type="button" class="seg-btn" data-led="3">P3</button>
@@ -117,8 +114,7 @@
                 </div>
               </div>
 
-              <!-- Physical LED preview bar -->
-              <div class="led-strip" aria-label="Controller player LED indicator">
+              <div class="led-strip" aria-label="Controller player light">
                 <span class="led-dot lit" data-dot="1"></span>
                 <span class="led-dot" data-dot="2"></span>
                 <span class="led-dot" data-dot="3"></span>
@@ -126,7 +122,7 @@
               </div>
 
               <details class="pop-tester" id="tester-details" open>
-                <summary>Live Input Tester</summary>
+                <summary>Test Buttons &amp; Sticks</summary>
                 <div class="tester-body">
                   <div class="tester-mid">
                     <div class="sticks">
@@ -157,35 +153,34 @@
                     </div>
                   </div>
                   <div class="paddle-row">
-                    <span class="paddle-pill" data-btn="19">GL · Rear Left</span>
-                    <span class="paddle-pill" data-btn="18">GR · Rear Right</span>
+                    <span class="paddle-pill" data-btn="19">GL · Back Left</span>
+                    <span class="paddle-pill" data-btn="18">GR · Back Right</span>
                   </div>
                   <div class="tester-buttons" id="tester-readout">
-                    Click Wake above or test your live controller
+                    Click Wake above, or press a button on your controller
                   </div>
                 </div>
               </details>
 
               <div class="pop-divider"></div>
 
-              <!-- WoW: Forever Readiness Checklist -->
-              <div class="readiness-card" aria-label="WoW: Forever Readiness Checklist">
+              <div class="readiness-card" aria-label="WoW: Forever checklist">
                 <div class="readiness-head">
-                  <span>WoW: Forever Readiness</span>
+                  <span>WoW: Forever Checklist</span>
                   <span class="ready-badge">Ready</span>
                 </div>
                 <div class="readiness-row">
                   <span class="check-dot ok" aria-hidden="true"></span>
                   <div>
                     <div class="pop-label">Switch 2 Controller</div>
-                    <div class="pop-sub">Awake &amp; streaming HID (057E:2069)</div>
+                    <div class="pop-sub">Awake over USB-C</div>
                   </div>
                 </div>
                 <label class="readiness-row switch-row">
                   <span class="check-dot ok" aria-hidden="true"></span>
                   <div class="readiness-grow">
-                    <div class="pop-label">macOS SDL2 Veto Fix</div>
-                    <div class="pop-sub"><code>SDL_JOYSTICK_MFI=0</code> active</div>
+                    <div class="pop-label">Mac Detection Fix</div>
+                    <div class="pop-sub">Lets WoW see the controller</div>
                   </div>
                   <input type="checkbox" class="mac-switch" checked />
                 </label>
@@ -193,14 +188,14 @@
                   <span class="check-dot ok" aria-hidden="true"></span>
                   <div>
                     <div class="pop-label">WoW: Forever Setup</div>
-                    <div class="pop-sub"><code>_forever_</code> + PadWakeProfiles v1.3</div>
+                    <div class="pop-sub">Controls &amp; class profiles installed</div>
                   </div>
                 </div>
                 <div class="readiness-row">
                   <span class="check-dot ok" aria-hidden="true"></span>
                   <div>
-                    <div class="pop-label">DialogueUI Addon</div>
-                    <div class="pop-sub">Switch mode (A=Accept, B=Exit)</div>
+                    <div class="pop-label">Quest Dialogs</div>
+                    <div class="pop-sub">A accepts, B closes</div>
                   </div>
                 </div>
               </div>
@@ -208,7 +203,7 @@
               <div class="pop-footer">
                 <label class="pop-check">
                   <input type="checkbox" checked />
-                  <span>Launch at Login</span>
+                  <span>Open at Login</span>
                 </label>
                 <span class="pop-quit">Quit</span>
               </div>
@@ -216,69 +211,60 @@
           </div>
 
           <p class="stage-caption">
-            Interactive preview — click <strong>Wake Controller</strong> or switch <strong>P1–P4</strong>. If your Switch 2 controller is awake right now, move the sticks or press buttons to see live Web Gamepad feedback.
+            Click <strong>Wake Controller</strong> or pick <strong>P1–P4</strong>. If your controller is plugged in, move a stick or press a button to test it live.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- What PadWake solves differently -->
-    <section class="section" id="why-padwake">
+    <!-- What it does -->
+    <section class="section" id="what-it-does">
       <div class="container narrow">
-        <h2>Built for one job — done end to end</h2>
+        <h2>What it does</h2>
         <p class="diff-lead">
-          Generic macOS controller tools stop at the USB wake packet and leave you fighting macOS's SDL2 veto,
-          backwards Xbox glyphs, dead rear paddles, and empty action bars. PadWake handles every layer of
-          playing <strong>World of Warcraft: Forever</strong> with a Switch 2 Pro Controller on macOS.
+          On a Mac, plugging a Switch 2 Pro Controller into USB-C leaves it asleep, and WoW won't pick it up on its own.
+          PadWake sits in your menu bar and takes care of the whole setup.
         </p>
 
         <dl class="diff-list">
           <div class="diff-row">
-            <dt>USB-C wake &amp; SDL2 veto fix</dt>
+            <dt>Wakes automatically</dt>
             <dd>
-              Event-driven IOKit hotplug wakes <code>057E:2069</code> automatically with <code>~0%</code> idle CPU,
-              and sets <code>SDL_JOYSTICK_MFI=0</code> so WoW's embedded SDL2 backend stops vetoing the native USB HID stream.
+              Plug in your controller over USB-C and it wakes up right away with your chosen player light on.
             </dd>
           </div>
           <div class="diff-row">
-            <dt>Exact Switch 2 diamond &amp; paddles</dt>
+            <dt>Fixes Mac detection</dt>
             <dd>
-              Pairs positional SDL2 mapping with WoW's <code>"labelStyle": "Reverse"</code> so <code>X</code> (Top),
-              <code>Y</code> (Left), <code>A</code> (Right), and <code>B</code> (Bottom) match your hands in both
-              position and printed glyph — plus native bindings for rear paddles <code>GL</code>, <code>GR</code>,
-              <code>C</code>, and <code>Capture</code>.
+              Applies the macOS setting WoW needs so the controller actually shows up in-game.
             </dd>
           </div>
           <div class="diff-row">
-            <dt>Level- &amp; spec-aware Forever crossbars</dt>
+            <dt>Right buttons &amp; back paddles</dt>
             <dd>
-              The bundled <code>PadWakeProfiles</code> addon scans your spellbook and talent tree, populates
-              WoW: Forever's native <code>ZR</code>/<code>ZL</code>/<code>ZL+ZR</code> crossbar slots across all 9 classes
-              (with Stealth/Stance/Form paging and first-shift prompts), and sets <code>DialogueUI</code> to Switch mode
-              so <code>A</code> accepts quests and <code>B</code> exits.
+              Shows X, Y, A, and B in the same layout as the controller in your hands, and enables the GL, GR, and C buttons.
             </dd>
           </div>
           <div class="diff-row">
-            <dt>Zero dependencies, no sudo</dt>
+            <dt>Sets up your skills &amp; quests</dt>
             <dd>
-              Pure C11 IOKit + SwiftUI with no DriverKit extensions, no virtual-HID entitlements, no Homebrew,
-              and no <code>sudo</code>. Compile locally in seconds with Apple's built-in Command Line Tools.
+              Includes a small WoW addon for all 9 classes that places skills for your level and talents, and fixes quest dialogs so A accepts and B goes back.
             </dd>
           </div>
         </dl>
       </div>
     </section>
 
-    <!-- Install / Build -->
+    <!-- Install -->
     <section class="section section-tinted" id="install">
       <div class="container narrow">
-        <h2>Install &amp; play in 60 seconds</h2>
+        <h2>How to install</h2>
 
         <div class="install-box">
-          <div class="install-tabs" role="tablist" aria-label="Install method">
-            <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="app">Menu-Bar App</button>
-            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="wow">In-Game Setup</button>
-            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="cli">CLI &amp; Daemon</button>
+          <div class="install-tabs" role="tablist" aria-label="Install steps">
+            <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="app">1. Mac App</button>
+            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="wow">2. In WoW</button>
+            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="cli">Terminal Only</button>
           </div>
 
           <div class="code-panel">
@@ -289,31 +275,14 @@ make install-app</code></pre>
           </div>
 
           <p class="install-note" data-note="app">
-            Builds a Universal Binary, installs <code>/Applications/PadWake.app</code>, and opens it in your menu bar.
-            Click <strong>Setup</strong> in the WoW: Forever Readiness card and restart Battle.net once.
+            Installs <strong>PadWake</strong> into Applications and opens it in your menu bar. Click <strong>Setup</strong> inside the app, then restart Battle.net once.
           </p>
           <p class="install-note" data-note="wow" hidden>
-            Run <code>/padwake apply</code> in WoW: Forever chat to configure class CVars, <code>GL</code>/<code>GR</code>/<code>C</code> macros,
-            <code>DialogueUI</code> Switch mode, and your level- &amp; spec-aware <code>ZR</code>/<code>ZL</code>/<code>ZL+ZR</code> crossbar.
+            Type <code>/padwake apply</code> in WoW chat to set up your buttons, back paddles, quest dialogs, and skills. Run <code>/padwake bars</code> anytime you level up.
           </p>
           <p class="install-note" data-note="cli" hidden>
-            Compiles the standalone IOKit CLI, installs WoW: Forever mappings + <code>PadWakeProfiles</code>, and optionally installs a background <code>LaunchAgent</code>.
+            Prefer not to run the menu-bar app? Build the command-line tool and install the WoW files directly from Terminal.
           </p>
-        </div>
-
-        <div class="facts-row">
-          <div class="fact">
-            <span class="fact-label">Controller Coverage</span>
-            <span class="fact-value">All 21 inputs incl. GL, GR &amp; C</span>
-          </div>
-          <div class="fact">
-            <span class="fact-label">WoW: Forever Addon</span>
-            <span class="fact-value">9 classes · level &amp; spec aware</span>
-          </div>
-          <div class="fact">
-            <span class="fact-label">Idle Footprint</span>
-            <span class="fact-value">Event-driven IOKit (~0% CPU)</span>
-          </div>
         </div>
       </div>
     </section>
@@ -327,15 +296,13 @@ make install-app</code></pre>
           <span>PadWake</span>
         </div>
         <div class="footer-links">
-          <a href="https://github.com/mindthelatency/padwake" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
-          <a href="https://github.com/mindthelatency/padwake/blob/main/games/wow/classes/README.md" target="_blank" rel="noopener noreferrer">9-Class Guide</a>
+          <a href="https://github.com/mindthelatency/padwake" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://github.com/mindthelatency/padwake/blob/main/games/wow/classes/README.md" target="_blank" rel="noopener noreferrer">Class Controls</a>
           <a href="https://github.com/mindthelatency/padwake/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
         </div>
       </div>
       <p class="disclaimer">
-        PadWake is an independent open-source interoperability utility. It is not affiliated with, endorsed by,
-        or sponsored by Nintendo Co., Ltd., Blizzard Entertainment, Inc., or Apple Inc. All product names and
-        trademarks belong to their respective owners.
+        PadWake is a free, independent open-source project and is not affiliated with Nintendo, Blizzard, or Apple.
       </p>
     </div>
   </footer>

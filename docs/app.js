@@ -1,5 +1,4 @@
 (() => {
-  // --- Interactive Popover Preview ---
   const wakeBtn = document.getElementById("wake-btn");
   const popover = document.querySelector(".popover");
   const statusDot = document.getElementById("status-dot");
@@ -31,23 +30,22 @@
       popover.classList.add("waking");
       menubarIcon.classList.add("flash");
       statusDot.className = "status-dot waking";
-      statusLabel.textContent = "Sending USB handshake…";
+      statusLabel.textContent = "Waking controller…";
 
-      // Playful stick & GL/A preview pulse during wake demo
       stickL.style.transform = "translate(-20%, -75%)";
       stickR.style.transform = "translate(-80%, -25%)";
       visualBtns.forEach((el) => {
         const idx = Number(el.dataset.btn);
         el.classList.toggle("pressed", idx === 1 || idx === 19);
       });
-      readout.textContent = "USB_INIT ACK · Player " + activeLed + " LED · GL + A ready";
+      readout.textContent = "Controller awake · Player " + activeLed + " light on";
       readout.classList.add("active");
 
       wakeTimer = setTimeout(() => {
         popover.classList.remove("waking");
         menubarIcon.classList.remove("flash");
         statusDot.className = "status-dot awake";
-        statusLabel.textContent = "Awake & Streaming";
+        statusLabel.textContent = "Connected & Ready";
         stickL.style.transform = "translate(-50%, -50%)";
         stickR.style.transform = "translate(-50%, -50%)";
         visualBtns.forEach((el) => el.classList.remove("pressed"));
@@ -55,8 +53,6 @@
     });
   }
 
-  // --- Optional Live Web Gamepad API Hook ---
-  // If the visitor actually has their woken Switch 2 controller connected, animate the preview live!
   const BTN_NAMES = [
     "B", "A", "Y", "X", "R", "ZR", "+", "R3",
     "Down", "Right", "Left", "Up", "L", "ZL", "-", "L3",
@@ -83,7 +79,7 @@
     const pressedSet = new Set();
     gp.buttons.forEach((b, i) => {
       if (b.pressed) {
-        pressed.push(BTN_NAMES[i] || ("b" + i));
+        pressed.push(BTN_NAMES[i] || ("Button " + i));
         pressedSet.add(i);
       }
     });
@@ -92,13 +88,13 @@
     });
 
     if (pressed.length > 0) {
-      readout.textContent = "Live HID: " + pressed.join(" · ");
+      readout.textContent = "Pressed: " + pressed.join(" · ");
       readout.classList.add("active");
     } else if (Math.hypot(lx, ly) > 0.15 || Math.hypot(rx, ry) > 0.15) {
-      readout.textContent = `Live HID: L(${lx.toFixed(2)}, ${ly.toFixed(2)}) R(${rx.toFixed(2)}, ${ry.toFixed(2)})`;
+      readout.textContent = "Moving sticks…";
       readout.classList.add("active");
     } else {
-      readout.textContent = "Switch 2 controller connected — press any button or paddle";
+      readout.textContent = "Controller connected — press any button";
       readout.classList.remove("active");
     }
     requestAnimationFrame(pollGamepad);
@@ -106,17 +102,16 @@
 
   window.addEventListener("gamepadconnected", () => {
     statusDot.className = "status-dot awake";
-    statusLabel.textContent = "Awake & Streaming (Live)";
+    statusLabel.textContent = "Connected (Live)";
     if (!polling) {
       polling = true;
       requestAnimationFrame(pollGamepad);
     }
   });
 
-  // --- Install Method Tabs & Copy Button ---
   const SNIPPETS = {
     app: `git clone https://github.com/mindthelatency/padwake.git\ncd padwake\nmake install-app`,
-    wow: `/padwake apply\n# Later after leveling up or learning spells:\n/padwake bars`,
+    wow: `/padwake apply\n\n# After leveling up:\n/padwake bars`,
     cli: `make\n./bin/padwake enable\nmake install-wow`
   };
 
