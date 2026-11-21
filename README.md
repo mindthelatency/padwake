@@ -9,6 +9,7 @@
 
   <p>
     <a href="https://mindthelatency.github.io/padwake/">Website</a> &middot;
+    <a href="https://github.com/mindthelatency/padwake/releases/latest">Download</a> &middot;
     <a href="#install">Install</a> &middot;
     <a href="#in-game-commands">Commands</a> &middot;
     <a href="#troubleshooting">Troubleshooting</a> &middot;
@@ -25,15 +26,15 @@
 - **Matches the physical buttons** so X, Y, A, and B sit in the same places on screen as on the controller, and enables the GL, GR, and C buttons.
 - **Sets up your bars and quests** with a small WoW addon for all 9 classes that places skills for your level and talents, and sets DialogueUI to Switch mode so A accepts and B closes.
 
-No Homebrew, third-party libraries, or `sudo` required. You only need macOS 13+ and Apple's Command Line Tools (`xcode-select --install`).
+Works on macOS 13+ (Apple Silicon and Intel). No Homebrew, third-party drivers, or `sudo` required.
 
 ---
 
 ## Install
 
-### Download from Releases
+### Download the app (easiest)
 
-Download the latest `PadWake-*-macOS.dmg` from [Releases](https://github.com/mindthelatency/padwake/releases), drag **PadWake** to **Applications**, and open it.
+Download the latest `PadWake-*-macOS.dmg` from [GitHub Releases](https://github.com/mindthelatency/padwake/releases/latest), drag **PadWake** to **Applications**, and open it.
 
 Because releases are not Apple-notarized yet, macOS may block it the first time. Allow it in **System Settings → Privacy & Security → Open Anyway**, or run:
 
@@ -42,6 +43,8 @@ xattr -cr /Applications/PadWake.app
 ```
 
 ### Or build from source
+
+Requires Apple's Command Line Tools (`xcode-select --install`). No Homebrew or `sudo` needed.
 
 ```bash
 git clone https://github.com/mindthelatency/padwake.git

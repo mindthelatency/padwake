@@ -110,9 +110,9 @@
   });
 
   const SNIPPETS = {
-    app: `git clone https://github.com/mindthelatency/padwake.git\ncd padwake\nmake install-app`,
+    dmg: `# After dragging PadWake to Applications, if macOS blocks the first open:\nxattr -cr /Applications/PadWake.app`,
     wow: `/padwake apply\n\n# After leveling up:\n/padwake bars`,
-    cli: `make\n./bin/padwake enable\nmake install-wow`
+    source: `git clone https://github.com/mindthelatency/padwake.git\ncd padwake\nmake install-app`
   };
 
   const tabBtns = document.querySelectorAll(".tab-btn");

@@ -45,13 +45,13 @@
           matches the X/Y/A/B buttons and rear paddles, and fills your action bars.
         </p>
         <div class="hero-actions">
-          <a href="#install" class="btn btn-primary">
+          <a href="https://github.com/mindthelatency/padwake/releases/latest" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M8 2.5v7.5m0 0L4.75 6.75M8 10l3.25-3.25M2.5 13h11"/>
             </svg>
             Install on Mac
           </a>
-          <a href="https://github.com/mindthelatency/padwake" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
+          <a href="#install" class="btn btn-secondary">How to install</a>
         </div>
         <p class="hero-meta">
           macOS 13+ <span aria-hidden="true">·</span> Apple Silicon &amp; Intel <span aria-hidden="true">·</span> Free &amp; open source
@@ -262,26 +262,25 @@
 
         <div class="install-box">
           <div class="install-tabs" role="tablist" aria-label="Install steps">
-            <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="app">1. Mac App</button>
+            <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="dmg">1. Download App</button>
             <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="wow">2. In WoW</button>
-            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="cli">Terminal Only</button>
+            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="source">Build from Source</button>
           </div>
 
           <div class="code-panel">
-            <pre><code id="install-code">git clone https://github.com/mindthelatency/padwake.git
-cd padwake
-make install-app</code></pre>
+            <pre><code id="install-code"># After dragging PadWake to Applications, if macOS blocks the first open:
+xattr -cr /Applications/PadWake.app</code></pre>
             <button type="button" class="copy-btn" id="copy-btn" aria-label="Copy commands">Copy</button>
           </div>
 
-          <p class="install-note" data-note="app">
-            Installs <strong>PadWake</strong> into Applications and opens it in your menu bar. Click <strong>Setup</strong> inside the app, then restart Battle.net once.
+          <p class="install-note" data-note="dmg">
+            Download the latest <code>PadWake-*-macOS.dmg</code> from <a href="https://github.com/mindthelatency/padwake/releases/latest" target="_blank" rel="noopener noreferrer"><strong>GitHub Releases</strong></a>, drag <strong>PadWake</strong> to Applications, and open it. Click <strong>Setup</strong> inside the menu bar, then restart Battle.net once.
           </p>
           <p class="install-note" data-note="wow" hidden>
             Type <code>/padwake apply</code> in WoW chat to set up your buttons, back paddles, quest dialogs, and skills. Run <code>/padwake bars</code> anytime you level up.
           </p>
-          <p class="install-note" data-note="cli" hidden>
-            Prefer not to run the menu-bar app? Build the command-line tool and install the WoW files directly from Terminal.
+          <p class="install-note" data-note="source" hidden>
+            Builds PadWake locally with Apple's Command Line Tools, installs it into Applications, and opens it in your menu bar.
           </p>
         </div>
       </div>

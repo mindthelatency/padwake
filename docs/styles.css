@@ -955,6 +955,12 @@ a {
   color: var(--ink-muted);
 }
 
+.install-note a {
+  color: var(--cyan);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .facts-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
