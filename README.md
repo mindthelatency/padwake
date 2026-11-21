@@ -5,7 +5,7 @@
 
   <h1>PadWake</h1>
 
-  <p>A small Mac menu-bar app to use a Nintendo Switch 2 Pro Controller in World of Warcraft: Forever over USB-C.</p>
+  <p>A small Mac menu-bar app to use a Nintendo Switch 2 Pro Controller in World of Warcraft (Forever, Classic, and Retail) over USB-C.</p>
 
   <p>
     <a href="https://mindthelatency.github.io/padwake/">Website</a> &middot;
@@ -24,7 +24,7 @@
 - **Wakes the controller over USB-C** as soon as you plug it in, and lets you pick the player light (P1–P4) and test all buttons and sticks.
 - **Fixes Mac detection** so World of Warcraft actually sees the controller instead of reporting none connected.
 - **Matches the physical buttons** so X, Y, A, and B sit in the same places on screen as on the controller, and enables the GL, GR, and C buttons.
-- **Sets up your bars and quests** with a small WoW addon for all 9 classes that places skills for your level and talents, and sets DialogueUI to Switch mode so A accepts and B closes.
+- **Sets up your bars and quests** with a small WoW addon for Forever, Classic, and Retail that places skills for your class, level, and talents, and sets DialogueUI to Switch mode so A accepts and B closes.
 
 Works on macOS 13+ (Apple Silicon and Intel). No Homebrew, third-party drivers, or `sudo` required.
 
@@ -55,9 +55,9 @@ make install-app
 ### First-time setup
 
 1. Click the gamepad icon in your Mac menu bar and check **Launch at Login**.
-2. Click **Setup** next to your World of Warcraft folder.
+2. Pick your WoW version (**Forever**, **Classic**, or **Retail**) and click **Setup**.
 3. Quit and reopen **Battle.net** once so WoW picks up the Mac controller fix.
-4. Launch **World of Warcraft: Forever** and type `/padwake apply` in chat.
+4. Launch **World of Warcraft** and type `/padwake apply` in chat.
 
 Right-click (or Control-click) the menu-bar icon anytime to wake the controller or quit PadWake.
 
@@ -65,7 +65,7 @@ Right-click (or Control-click) the menu-bar icon anytime to wake the controller 
 
 ## In-game commands
 
-PadWake installs a small addon (`PadWakeProfiles`) that works with WoW: Forever's built-in controller bars (and detects ConsolePort if you use it). See [games/wow/classes/README.md](games/wow/classes/README.md) for the 9-class button and rear-paddle layouts.
+PadWake installs a small addon (`PadWakeProfiles`) for **WoW: Forever**, **WoW Classic** (Era, Anniversary, and Progression), and **Retail** — working with WoW's built-in controller bars (and detecting ConsolePort if you use it). See [games/wow/classes/README.md](games/wow/classes/README.md) for the button and rear-paddle layouts.
 
 - `/padwake apply` — Full setup (controller settings, rear-paddle macros, DialogueUI Switch mode, and skills for your level and talents).
 - `/padwake bars` — Refresh your skills after leveling up, training new spells, or shifting into Stealth / Stance / Form. Add `--fill` to only fill empty slots.
