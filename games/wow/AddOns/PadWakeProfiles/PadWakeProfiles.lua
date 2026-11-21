@@ -1,8 +1,8 @@
 -- PadWakeProfiles.lua
 -- Lightweight, zero-dependency companion addon for PadWake (057E:2069 USB Gamepad).
--- Applies World of Warcraft: Forever class-optimized C_GamePad CVars, native PAD*
--- bindings (immune to synchronizeBindings cloud overwrites), starter macros, and
--- level- & spellbook-aware automatic action bar population for all 9 classes.
+-- Applies World of Warcraft (Forever, Classic & Retail) class-optimized C_GamePad CVars,
+-- native PAD* bindings (immune to synchronizeBindings cloud overwrites), starter macros,
+-- DialogueUI Switch auto-config, and level- & spec-aware action bars.
 
 local ADDON_NAME, ns = ...
 local PREFIX = "|cff38bdf8[PadWake]|r "

@@ -6,7 +6,7 @@ REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 APP_NAME="${APP_NAME:-PadWake}"
 BUNDLE_ID="${BUNDLE_ID:-com.padwake.app}"
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-1.4.0}"
 UNIVERSAL="${UNIVERSAL:-0}"
 MIN_MACOS="${MIN_MACOS:-13.0}"
 

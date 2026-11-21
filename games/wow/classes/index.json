@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "game": "World of Warcraft: Forever",
-  "clientFlavor": "_forever_",
+  "game": "World of Warcraft (Forever, Classic, Retail)",
+  "clientFlavors": ["_forever_", "_classic_era_", "_anniversary_", "_classic_", "_retail_"],
   "controller": {
     "vid": "0x057E",
     "pid": "0x2069",
@@ -89,6 +89,14 @@
       "specs": ["Feral (Cat/Bear)", "Balance", "Restoration"],
       "summary": "Fluid shapeshift macros, Lacerate/Cat-Bear mirroring, GR Bash, GL Travel/Cat Shift",
       "file": "druid.json"
+    },
+    {
+      "id": "deathknight",
+      "token": "DEATHKNIGHT",
+      "name": "Death Knight",
+      "specs": ["Blood", "Frost", "Unholy"],
+      "summary": "Classic Progression melee/tank, GR Mind Freeze, GL Death Grip, ZL+GR AMS, ZL+GL Death Strike",
+      "file": "deathknight.json"
     }
   ]
 }

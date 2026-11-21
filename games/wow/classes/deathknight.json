@@ -1,0 +1,86 @@
+{
+  "id": "deathknight",
+  "token": "DEATHKNIGHT",
+  "name": "Death Knight",
+  "specs": ["Blood", "Frost", "Unholy"],
+  "playstyle": "Classic Progression Melee / Tank — rune & runic power rotation, Presence switching, GR Mind Freeze, GL Death Grip",
+  "cvars": {
+    "GamePadEnable": "1",
+    "GamePadEmulateShift": "PADLTRIGGER",
+    "GamePadEmulateCtrl": "PADRTRIGGER",
+    "GamePadEmulateAlt": "NONE",
+    "GamePadEmulateTapWindowMs": "350",
+    "GamePadCursorAutoEnable": "1",
+    "GamePadCursorCentering": "1",
+    "GamePadFaceMovementMaxAngle": "0",
+    "SoftTargetEnemy": "3",
+    "SoftTargetInteract": "3",
+    "SoftTargetFriend": "0"
+  },
+  "paddles": {
+    "PADPADDLE1": { "label": "GR", "binding": "MACRO PW_DK_INT", "role": "Interrupt (Mind Freeze)" },
+    "PADPADDLE2": { "label": "GL", "binding": "MACRO PW_DK_GRIP", "role": "Pull / Gap Closer (Death Grip)" },
+    "SHIFT-PADPADDLE1": { "label": "ZL+GR", "binding": "MACRO PW_DK_AMS", "role": "Magic Defensive (Anti-Magic Shell)" },
+    "SHIFT-PADPADDLE2": { "label": "ZL+GL", "binding": "MACRO PW_DK_DS", "role": "Self-Heal / Tank Strike (Death Strike)" },
+    "PADPADDLE3": { "label": "C", "binding": "TOGGLEWORLDMAP", "role": "World Map (ZL+C = Bags)" }
+  },
+  "actionBarGuide": {
+    "base_bar1": {
+      "PAD1 (B)": "Primary Rune Strike (Scourge Strike / Obliterate / Heart Strike)",
+      "PAD2 (A)": "Runic Power Dump (Frost Strike / Death Coil / Rune Strike)",
+      "PAD3 (Y)": "Disease / AoE Opener (Howling Blast / Icy Touch / Outbreak)",
+      "PAD4 (X)": "Self-Heal / Builder (Death Strike / Festering Strike / Plague Strike)",
+      "PADDUP": "Death and Decay / Pestilence / Blood Boil",
+      "PADDRIGHT": "Chains of Ice / Strangulate / Dark Command",
+      "PADDDOWN": "Horn of Winter / Bone Shield",
+      "PADDLEFT": "Death Grip / Dark Command"
+    },
+    "shift_bar2_ZL": {
+      "ZL+PAD1": "Blood Presence",
+      "ZL+PAD2": "Frost Presence",
+      "ZL+PAD3": "Unholy Presence",
+      "ZL+PAD4": "Icebound Fortitude / Vampiric Blood",
+      "ZL+PADDUP": "Anti-Magic Shell",
+      "ZL+PADDRIGHT": "Pillar of Frost / Summon Gargoyle / Dancing Rune Weapon",
+      "ZL+PADDDOWN": "Empower Rune Weapon / Lichborne",
+      "ZL+PADDLEFT": "Dark Command / Strangulate"
+    },
+    "ctrl_bar3_ZR": {
+      "ZR+PAD1": "Army of the Dead / Raise Dead",
+      "ZR+PAD2": "Death Pact / Rune Tap",
+      "ZR+PAD3": "Path of Frost",
+      "ZR+PAD4": "Death Gate",
+      "ZR+PADDUP": "Acherus Deathcharger",
+      "ZR+PADDRIGHT": "Raise Ally",
+      "ZR+PADDDOWN": "Hearthstone",
+      "ZR+PADDLEFT": "Control Undead"
+    }
+  },
+  "macros": [
+    {
+      "name": "PW_DK_INT",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Instant Mind Freeze interrupt on rear right paddle",
+      "body": "#showtooltip Mind Freeze\n/cast Mind Freeze"
+    },
+    {
+      "name": "PW_DK_GRIP",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Instant Death Grip pull on rear left paddle",
+      "body": "#showtooltip Death Grip\n/cast Death Grip"
+    },
+    {
+      "name": "PW_DK_AMS",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Anti-Magic Shell on ZL+GR",
+      "body": "#showtooltip Anti-Magic Shell\n/cast Anti-Magic Shell"
+    },
+    {
+      "name": "PW_DK_DS",
+      "icon": "INV_MISC_QUESTIONMARK",
+      "description": "Death Strike on ZL+GL",
+      "body": "#showtooltip Death Strike\n/cast Death Strike"
+    }
+  ],
+  "consolePortNotes": "Keep GR/GL bound to PW_DK_INT (Mind Freeze) and PW_DK_GRIP (Death Grip) for instant interrupts and pulls while moving."
+}

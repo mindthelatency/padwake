@@ -2,7 +2,7 @@ import Cocoa
 import SwiftUI
 import ServiceManagement
 
-// MARK: - WoW: Forever Setup Model
+// MARK: - World of Warcraft Setup Model
 
 enum WoWClassPreset: String, CaseIterable, Identifiable {
     case auto
@@ -272,7 +272,7 @@ final class PadWakeModel: ObservableObject {
         pw_hid_monitor_stop()
     }
 
-    // MARK: - WoW: Forever Detection & Installation
+    // MARK: - World of Warcraft Detection & Installation
 
     nonisolated private static let defaultWoWPath = "/Applications/World of Warcraft"
     private static let savedWoWPathsKey = "profilePaths.wow-wtf"
@@ -1155,7 +1155,7 @@ struct PopoverView: View {
 
             Divider()
 
-            // WoW: Forever Readiness Checklist & Class Options
+            // WoW Readiness Checklist & Class Options
             VStack(alignment: .leading, spacing: 8) {
                 WoWReadinessCardView(model: model)
 

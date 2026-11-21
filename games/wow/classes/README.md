@@ -1,6 +1,6 @@
-# World of Warcraft: Forever — Controller Class Profiles
+# World of Warcraft — Controller Class Profiles
 
-Optimized **World of Warcraft: Forever** (Classic+, Level 60) controller profiles for all 9 classes, built for native `C_GamePad` and **ConsolePort**-compatible crossbar muscle memory on 21-button USB controllers (`057E:2069` with rear grip paddles `GR`, `GL`, and `C`).
+Controller profiles for **World of Warcraft** (**Forever**, **Classic**, and **Retail**), built for Switch 2 Pro Controller (`057E:2069`) with rear paddles (`GR`, `GL`, `C`) and both native `C_GamePad` and **ConsolePort** layouts.
 
 ## Universal Controller Backbone
 
@@ -21,7 +21,7 @@ Every class shares the same 4-layer modifier structure so switching specs or alt
 | `PADPADDLE3` | **C** | World Map (`ZL+C` = Bags, `ZR+C` = Character) |
 | `PADFORWARD` / `PADBACK` | **`+` / `-`** | Game Menu / All Bags |
 
-## All 9 WoW: Forever Class Profiles
+## Class Profiles
 
 | Class | Profile | Strafe Angle | Soft Target Friend | GR (`PADPADDLE1`) | GL (`PADPADDLE2`) |
 |---|---|---|---|---|---|
@@ -34,10 +34,11 @@ Every class shares the same 4-layer modifier structure so switching specs or alt
 | **Mage** | [mage.json](mage.json) | `115°` (kite) | `0` | `PW_MAG_CS` (Stopcast Counterspell) | `PW_MAG_BLK` (Stopcast Blink) |
 | **Warlock** | [warlock.json](warlock.json) | `115°` (caster) | `0` | `PW_WLK_FEAR` (Stopcast Fear) | `PW_WLK_PET` (Pet Attack / Follow) |
 | **Druid** | [druid.json](druid.json) | `0°` (feral/hybrid) | `1` (hybrid) | `PW_DRU_CC` (Form-aware CC) | `PW_DRU_TRV` (Aquatic / Travel / Cat) |
+| **Death Knight** | [deathknight.json](deathknight.json) | `0°` (melee/tank) | `0` | `PW_DK_INT` (Mind Freeze) | `PW_DK_GRIP` (Death Grip) |
 
 ## Applying In-Game (Native or ConsolePort)
 
-Install via **PadWake.app → Game Profiles → World of Warcraft** (or `./scripts/install-wow-forever.sh`), then run in-game chat:
+Install via **PadWake.app** (pick Forever, Classic, or Retail and click **Setup**) or `./scripts/install-wow-forever.sh`, then run in chat:
 
 ```text
 /padwake apply

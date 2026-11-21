@@ -148,4 +148,4 @@ EOF
     echo "[wow] Installed PadWakeProfiles addon -> $ADDON_DST (preset: $CLASS_TOKEN)"
 fi
 
-echo "[wow] Done! In World of Warcraft: Forever, verify with '/dump C_GamePad.GetAllDeviceIDs()' and apply your class profile with '/padwake apply'."
+echo "[wow] Done! In World of Warcraft, verify with '/dump C_GamePad.GetAllDeviceIDs()' and apply your class profile with '/padwake apply'."
