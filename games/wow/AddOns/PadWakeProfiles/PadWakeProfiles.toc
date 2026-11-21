@@ -1,8 +1,8 @@
 ## Interface: 11509, 11600, 16001
 ## Title: PadWake Profiles
-## Notes: Level-aware World of Warcraft: Forever controller CVars, native PAD* bindings, starter macros, and auto-populated action bars for all 9 classes.
+## Notes: Level- & talent-spec-aware World of Warcraft: Forever controller CVars, native PAD* bindings, DialogueUI Switch auto-config, starter macros, and auto-populated crossbar skills for all 9 classes.
 ## Author: PadWake Contributors
-## Version: 1.2.0
+## Version: 1.3.0
 ## SavedVariablesPerCharacter: PadWakeProfilesCharDB
 
 SelectedPreset.lua

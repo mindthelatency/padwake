@@ -27,6 +27,49 @@ local function isForeverGamepadUI()
     return GetCVar and GetCVar("InputDeviceInterfaceStyle") == "1"
 end
 
+-- Detects Nintendo Switch 2 Pro Controller (VID 0x057E = 1406, PID 0x2069 = 8297)
+local function isSwitch2Connected()
+    if not (C_GamePad and C_GamePad.GetAllDeviceIDs and C_GamePad.GetDeviceRawState) then
+        return false
+    end
+    local okIds, ids = pcall(C_GamePad.GetAllDeviceIDs)
+    if not okIds or type(ids) ~= "table" then
+        return false
+    end
+    for _, id in ipairs(ids) do
+        local okState, raw = pcall(C_GamePad.GetDeviceRawState, id)
+        if okState and type(raw) == "table" and raw.vendorID == 1406 and raw.productID == 8297 then
+            return true
+        end
+    end
+    return false
+end
+
+local function configureDialogueUISwitchMode(explicitCommand)
+    if type(DialogueUI_DB) ~= "table" then
+        if explicitCommand then
+            printMsg("DialogueUI addon is not loaded — nothing to configure.")
+        end
+        return false
+    end
+
+    if not explicitCommand and not isSwitch2Connected() then
+        return false
+    end
+
+    if DialogueUI_DB.InputDevice == 4 then
+        if explicitCommand then
+            printMsg("DialogueUI is already set to Switch mode (4: A=Accept, B=Exit).")
+        end
+        return true
+    end
+
+    local prev = tostring(DialogueUI_DB.InputDevice or "default")
+    DialogueUI_DB.InputDevice = 4 -- 4 = Nintendo Switch layout (PAD2/A confirm, PAD1/B cancel)
+    printMsg(string.format("Set DialogueUI InputDevice to Switch (4, was %s) so A=Accept and B=Exit match your Switch 2 controller. Type '/reload' to activate.", prev))
+    return true
+end
+
 local function safeSetCVar(key, value)
     if C_CVar and C_CVar.GetCVarInfo then
         if C_CVar.GetCVarInfo(key) == nil then
@@ -694,6 +737,301 @@ local CLASS_PROFILES = {
     },
 }
 
+-- --- Talent-Spec Detection & Spec-Tailored Crossbar Overrides ---
+
+local CLASS_SPEC_TREES = {
+    WARRIOR = {
+        [1] = { key = "ARMS",          label = "Arms" },
+        [2] = { key = "FURY",          label = "Fury" },
+        [3] = { key = "PROTECTION",    label = "Protection" },
+    },
+    PALADIN = {
+        [1] = { key = "HOLY",          label = "Holy" },
+        [2] = { key = "PROTECTION",    label = "Protection" },
+        [3] = { key = "RETRIBUTION",   label = "Retribution" },
+    },
+    HUNTER = {
+        [1] = { key = "BEAST_MASTERY", label = "Beast Mastery" },
+        [2] = { key = "MARKSMANSHIP",  label = "Marksmanship" },
+        [3] = { key = "SURVIVAL",      label = "Survival" },
+    },
+    ROGUE = {
+        [1] = { key = "ASSASSINATION", label = "Assassination" },
+        [2] = { key = "COMBAT",        label = "Combat" },
+        [3] = { key = "SUBTLETY",      label = "Subtlety" },
+    },
+    PRIEST = {
+        [1] = { key = "DISCIPLINE",    label = "Discipline" },
+        [2] = { key = "HOLY",          label = "Holy" },
+        [3] = { key = "SHADOW",        label = "Shadow" },
+    },
+    SHAMAN = {
+        [1] = { key = "ELEMENTAL",     label = "Elemental" },
+        [2] = { key = "ENHANCEMENT",   label = "Enhancement" },
+        [3] = { key = "RESTORATION",   label = "Restoration" },
+    },
+    MAGE = {
+        [1] = { key = "ARCANE",        label = "Arcane" },
+        [2] = { key = "FIRE",          label = "Fire" },
+        [3] = { key = "FROST",         label = "Frost" },
+    },
+    WARLOCK = {
+        [1] = { key = "AFFLICTION",    label = "Affliction" },
+        [2] = { key = "DEMONOLOGY",    label = "Demonology" },
+        [3] = { key = "DESTRUCTION",   label = "Destruction" },
+    },
+    DRUID = {
+        [1] = { key = "BALANCE",       label = "Balance" },
+        [2] = { key = "FERAL",         label = "Feral" },
+        [3] = { key = "RESTORATION",   label = "Restoration" },
+    },
+}
+
+-- Per-spec priority overrides merged onto the class base/shift bars.
+local SPEC_BAR_OVERRIDES = {
+    WARRIOR = {
+        PROTECTION = {
+            base = {
+                [1] = { "Shield Slam", "Devastate", "Sunder Armor", "Heroic Strike", "Attack" },
+                [2] = { "Revenge", "Heroic Strike", "Rend" },
+                [3] = { "Thunder Clap", "Cleave", "Demoralizing Shout" },
+                [4] = { "Shield Block", "Last Stand", "Shield Wall" },
+                [5] = { "Taunt", "Mocking Blow" },
+                [6] = { "Demoralizing Shout", "Disarm" },
+            },
+        },
+        FURY = {
+            base = {
+                [1] = { "Bloodthirst", "Heroic Strike", "Attack" },
+                [2] = { "Whirlwind", "Slam", "Heroic Strike" },
+                [3] = { "Cleave", "Overpower", "Thunder Clap" },
+                [4] = { "macro:PW_WAR_VR", "Execute", "Victory Rush" },
+            },
+        },
+    },
+    PALADIN = {
+        HOLY = {
+            base = {
+                [1] = { "macro:PW_PAL_HEAL", "Flash of Light", "Holy Light" },
+                [2] = { "Holy Shock", "Holy Light", "Judgement" },
+                [3] = { "Holy Light", "Consecration" },
+                [4] = { "macro:PW_PAL_CLN", "Cleanse", "Purify" },
+                [5] = { "Divine Favor", "Blessing of Freedom" },
+                [6] = { "Judgement", "Hammer of Justice" },
+                [7] = { "Consecration", "Exorcism" },
+                [8] = { "Seal of Wisdom", "Seal of Light", "Seal of Righteousness" },
+            },
+        },
+        PROTECTION = {
+            base = {
+                [1] = { "Consecration", "Judgement", "Seal of Righteousness", "Attack" },
+                [2] = { "Holy Shield", "Shield of the Righteous", "Seal of Righteousness" },
+                [3] = { "Judgement", "Avenger's Shield", "Exorcism" },
+                [4] = { "Hand of Reckoning", "Righteous Defense", "Hammer of Justice" },
+                [5] = { "Seal of Wisdom", "Seal of Light", "Seal of Righteousness" },
+                [6] = { "Righteous Fury", "Hammer of Justice" },
+            },
+        },
+        RETRIBUTION = {
+            base = {
+                [1] = { "Crusader Strike", "Judgement", "Seal of Command", "Seal of Righteousness", "Attack" },
+                [2] = { "Judgement", "Seal of Command", "Seal of Righteousness" },
+                [3] = { "Consecration", "Exorcism", "Hammer of Justice" },
+                [4] = { "Hammer of Wrath", "Repentance", "Exorcism" },
+            },
+        },
+    },
+    HUNTER = {
+        SURVIVAL = {
+            base = {
+                [1] = { "Raptor Strike", "Auto Shot", "Attack" },
+                [2] = { "Mongoose Bite", "Counterattack", "Arcane Shot" },
+                [3] = { "Wing Clip", "Wyvern Sting", "Multi-Shot" },
+                [4] = { "Explosive Trap", "Immolation Trap", "Serpent Sting" },
+                [5] = { "Freezing Trap", "Concussive Shot" },
+                [6] = { "Hunter's Mark" },
+                [7] = { "Deterrence", "Disengage" },
+                [8] = { "Scatter Shot", "Feign Death" },
+            },
+        },
+    },
+    PRIEST = {
+        SHADOW = {
+            base = {
+                [1] = { "Mind Flay", "Mind Blast", "Smite" },
+                [2] = { "Mind Blast", "Smite" },
+                [3] = { "Shadow Word: Pain" },
+                [4] = { "Devouring Plague", "Vampiric Embrace", "Power Word: Shield" },
+                [5] = { "Silence", "Psychic Scream" },
+                [6] = { "macro:PW_PRI_DISP", "Dispel Magic" },
+                [7] = { "Shoot", "Smite" },
+                [8] = { "Shadowform", "Fade" },
+            },
+        },
+        HOLY = {
+            base = {
+                [1] = { "macro:PW_PRI_HEAL", "Flash Heal", "Lesser Heal" },
+                [2] = { "Renew", "Penance" },
+                [3] = { "Greater Heal", "Heal", "Lesser Heal" },
+                [4] = { "macro:PW_PRI_SHLD", "Power Word: Shield" },
+                [5] = { "Prayer of Healing", "Holy Nova" },
+                [6] = { "macro:PW_PRI_DISP", "Dispel Magic" },
+                [7] = { "Desperate Prayer", "Inner Focus" },
+                [8] = { "Fade", "Smite" },
+            },
+        },
+        DISCIPLINE = {
+            base = {
+                [1] = { "macro:PW_PRI_SHLD", "Power Word: Shield", "Flash Heal" },
+                [2] = { "Penance", "macro:PW_PRI_HEAL", "Flash Heal", "Lesser Heal" },
+                [3] = { "Renew", "Greater Heal", "Heal" },
+                [4] = { "Power Infusion", "Inner Focus", "Smite" },
+                [5] = { "Prayer of Healing", "Holy Nova" },
+                [6] = { "macro:PW_PRI_DISP", "Dispel Magic" },
+            },
+        },
+    },
+    SHAMAN = {
+        ELEMENTAL = {
+            base = {
+                [1] = { "Lightning Bolt", "Attack" },
+                [2] = { "Chain Lightning", "Lava Burst", "Earth Shock" },
+                [3] = { "Flame Shock", "Earth Shock" },
+                [4] = { "Earth Shock", "Frost Shock", "Purge" },
+                [5] = { "Elemental Mastery", "Searing Totem" },
+                [6] = { "Grounding Totem", "Earthbind Totem" },
+            },
+        },
+        ENHANCEMENT = {
+            base = {
+                [1] = { "Stormstrike", "Earth Shock", "Attack" },
+                [2] = { "Earth Shock", "Flame Shock" },
+                [3] = { "Flame Shock", "Frost Shock" },
+                [4] = { "Shamanistic Rage", "Purge", "Lightning Shield" },
+                [5] = { "Windfury Totem", "Strength of Earth Totem" },
+                [6] = { "Searing Totem", "Fire Nova Totem", "Grounding Totem" },
+            },
+        },
+        RESTORATION = {
+            base = {
+                [1] = { "macro:PW_SHM_HEAL", "Lesser Healing Wave", "Healing Wave" },
+                [2] = { "Healing Wave", "Riptide" },
+                [3] = { "Chain Heal", "Lesser Healing Wave" },
+                [4] = { "Nature's Swiftness", "Earth Shield", "Water Shield" },
+                [5] = { "Mana Spring Totem", "Healing Stream Totem" },
+                [6] = { "Cure Poison", "Cure Disease", "Tremor Totem" },
+                [7] = { "Earth Shock", "Purge" },
+                [8] = { "Grounding Totem", "Mana Tide Totem" },
+            },
+        },
+    },
+    DRUID = {
+        RESTORATION = {
+            base = {
+                [1] = { "macro:PW_DRU_HOT", "Rejuvenation", "Healing Touch" },
+                [2] = { "Regrowth", "Healing Touch" },
+                [3] = { "Healing Touch", "Swiftmend" },
+                [4] = { "Swiftmend", "Nature's Swiftness", "Barkskin" },
+                [5] = { "Innervate", "Tranquility" },
+                [6] = { "Abolish Poison", "Cure Poison", "Remove Curse" },
+                [7] = { "Entangling Roots", "Moonfire" },
+                [8] = { "Barkskin", "Travel Form" },
+            },
+        },
+        BALANCE = {
+            base = {
+                [1] = { "Starfire", "Wrath" },
+                [2] = { "Wrath", "Moonfire" },
+                [3] = { "Moonfire", "Insect Swarm" },
+                [4] = { "Insect Swarm", "Hurricane", "macro:PW_DRU_HOT" },
+                [5] = { "Moonkin Form", "Entangling Roots" },
+                [6] = { "Faerie Fire", "Barkskin" },
+            },
+        },
+        FERAL = {
+            base = {
+                [1] = { "Cat Form", "Wrath" },
+                [2] = { "Dire Bear Form", "Bear Form", "Moonfire" },
+                [3] = { "macro:PW_DRU_HOT", "Rejuvenation", "Regrowth" },
+                [4] = { "Faerie Fire (Feral)", "Faerie Fire", "Entangling Roots" },
+            },
+        },
+    },
+}
+
+local function readTalentTabPoints(tabIndex)
+    if not GetTalentTabInfo then return nil, 0 end
+    local ok, r1, r2, r3, _, r5 = pcall(GetTalentTabInfo, tabIndex)
+    if not ok then return nil, 0 end
+    if type(r1) == "number" and type(r2) == "string" then
+        -- Newer signature: id, name, description, iconTexture, pointsSpent
+        return r2, tonumber(r5) or 0
+    elseif type(r1) == "string" then
+        -- Classic / Forever signature: name, iconTexture, pointsSpent, fileName
+        return r1, tonumber(r3) or 0
+    end
+    return nil, 0
+end
+
+-- Returns canonical specKey (e.g. "PROTECTION"), displayLabel (e.g. "Protection (21 pts)"), points
+-- Returns nil, nil, 0 when 0 talent points are spent (e.g. Levels 1-9).
+local function detectActiveSpec(token)
+    local trees = CLASS_SPEC_TREES[token]
+    if not trees then return nil, nil, 0 end
+
+    if GetNumTalentTabs and GetTalentTabInfo then
+        local okNum, numTabs = pcall(GetNumTalentTabs)
+        if okNum and type(numTabs) == "number" and numTabs > 0 then
+            local bestIdx, bestPts, bestName = nil, 0, nil
+            for i = 1, math.min(numTabs, 3) do
+                local tabName, pts = readTalentTabPoints(i)
+                if pts > bestPts then
+                    bestPts = pts
+                    bestIdx = i
+                    bestName = tabName
+                end
+            end
+            if bestIdx and bestPts > 0 and trees[bestIdx] then
+                local label = (bestName and bestName ~= "") and bestName or trees[bestIdx].label
+                return trees[bestIdx].key, string.format("%s (%d pts)", label, bestPts), bestPts
+            end
+            return nil, nil, 0
+        end
+    end
+
+    if C_SpecializationInfo and C_SpecializationInfo.GetSpecialization and C_SpecializationInfo.GetSpecializationInfo then
+        local okIdx, specIdx = pcall(C_SpecializationInfo.GetSpecialization)
+        if okIdx and type(specIdx) == "number" and specIdx >= 1 and trees[specIdx] then
+            local okInfo, _, specName = pcall(C_SpecializationInfo.GetSpecializationInfo, specIdx)
+            local label = (okInfo and type(specName) == "string" and specName ~= "") and specName or trees[specIdx].label
+            return trees[specIdx].key, label, 1
+        end
+    end
+
+    return nil, nil, 0
+end
+
+local function resolveBarSpec(profile, token, specKey, barKey)
+    local baseSpec = profile.bars and profile.bars[barKey]
+    local specTbl = specKey and SPEC_BAR_OVERRIDES[token] and SPEC_BAR_OVERRIDES[token][specKey]
+    local overrideSpec = specTbl and specTbl[barKey]
+    if not overrideSpec then
+        return baseSpec
+    end
+    local merged = {}
+    if baseSpec then
+        for i = 1, 8 do
+            merged[i] = baseSpec[i]
+        end
+    end
+    for i = 1, 8 do
+        if overrideSpec[i] then
+            merged[i] = overrideSpec[i]
+        end
+    end
+    return merged
+end
+
 -- --- Live Spellbook Scanner (C_SpellBook + Classic 1.15 fallback) ---
 
 local function scanKnownSpells()
@@ -879,6 +1217,7 @@ local function populateBars(token, fillOnly)
     end
 
     local level = UnitLevel("player") or 1
+    local specKey, specLabel = detectActiveSpec(token)
     local knownSpells = scanKnownSpells()
     local placed = 0
     local skippedOccupied = 0
@@ -889,15 +1228,18 @@ local function populateBars(token, fillOnly)
     if isForeverGamepadUI() then
         -- WoW: Forever native Controller UI (GamepadMainActionBarFrame slots 185..208, stance-paged)
         local bonusKey, stanceLabel = activeBonusKeyForClass(token)
-        local primarySpec = (bonusKey and profile.bars[bonusKey]) or profile.bars.base
+        local primarySpec = (bonusKey and resolveBarSpec(profile, token, specKey, bonusKey))
+            or resolveBarSpec(profile, token, specKey, "base")
+        local leftSpec   = resolveBarSpec(profile, token, specKey, "shift")
+        local bottomSpec = resolveBarSpec(profile, token, specKey, "ctrl")
 
         -- Right bar (ZR) = primary combat (or active Stealth/Stance/Form bar)
         -- Left bar  (ZL) = secondary combat / defensives / utility
         -- Bottom bar (ZL+ZR) = cooldowns / macros / Hearthstone
         local plan = {
-            { target = "right",  spec = primarySpec,        isPrimary = true },
-            { target = "left",   spec = profile.bars.shift, isPrimary = false },
-            { target = "bottom", spec = profile.bars.ctrl,  isPrimary = false },
+            { target = "right",  spec = primarySpec, isPrimary = true },
+            { target = "left",   spec = leftSpec,    isPrimary = false },
+            { target = "bottom", spec = bottomSpec,  isPrimary = false },
         }
 
         for _, p in ipairs(plan) do
@@ -934,14 +1276,19 @@ local function populateBars(token, fillOnly)
             end
         end
 
+        PadWakeProfilesCharDB = PadWakeProfilesCharDB or {}
+        PadWakeProfilesCharDB.populatedStances = PadWakeProfilesCharDB.populatedStances or {}
+        PadWakeProfilesCharDB.populatedStances[bonusKey or "base"] = true
+
         local modeLabel = fillOnly and " (empty slots only)" or ""
+        local specNote = specLabel and (" [" .. specLabel .. "]") or ""
         local stanceNote = stanceLabel and (" [" .. stanceLabel .. "]") or ""
-        printMsg(string.format("Assigned %d %s skills onto Forever Crossbar (ZR/ZL/ZL+ZR) for Level %d [%s]%s%s.",
-            placed, profile.name, level, levelTierLabel(level), stanceNote, modeLabel))
+        printMsg(string.format("Assigned %d %s skills onto Forever Crossbar (ZR/ZL/ZL+ZR) for Level %d [%s]%s%s%s.",
+            placed, profile.name, level, levelTierLabel(level), specNote, stanceNote, modeLabel))
         if #summaryParts > 0 then
             printMsg("ZR Primary diamond: " .. table.concat(summaryParts, " | "))
         end
-        if token == "ROGUE" and not stanceLabel then
+        if token == "ROGUE" and not stanceLabel and not PadWakeProfilesCharDB.populatedStances["bonus1"] then
             printMsg("Tip: Press GL to enter Stealth and run '/padwake bars' once more to populate your Stealth ZR diamond too.")
         elseif (token == "WARRIOR" or token == "DRUID") and not stanceLabel then
             printMsg("Tip: Shift into another Stance/Form and run '/padwake bars' to populate that form's ZR diamond too.")
@@ -956,7 +1303,7 @@ local function populateBars(token, fillOnly)
     local barOrder = { "base", "shift", "ctrl", "both", "bonus1", "bonus2", "bonus3" }
 
     for _, barKey in ipairs(barOrder) do
-        local barSpec = profile.bars[barKey]
+        local barSpec = resolveBarSpec(profile, token, specKey, barKey)
         local offset = BAR_OFFSETS[barKey]
         if barSpec and offset ~= nil then
             local isBonus = (barKey == "bonus1" or barKey == "bonus2" or barKey == "bonus3")
@@ -993,8 +1340,9 @@ local function populateBars(token, fillOnly)
     end
 
     local modeLabel = fillOnly and " (empty slots only)" or ""
-    printMsg(string.format("Assigned %d level-appropriate %s skills for Level %d [%s]%s.",
-        placed, profile.name, level, levelTierLabel(level), modeLabel))
+    local specNote = specLabel and (" [" .. specLabel .. "]") or ""
+    printMsg(string.format("Assigned %d level-appropriate %s skills for Level %d [%s]%s%s.",
+        placed, profile.name, level, levelTierLabel(level), specNote, modeLabel))
     if #summaryParts > 0 then
         printMsg("Base diamond: " .. table.concat(summaryParts, " | "))
     end
@@ -1299,8 +1647,10 @@ end
 local function printInfo(token)
     local profile = CLASS_PROFILES[token]
     local level = UnitLevel("player") or 1
-    printMsg(string.format("%s (Level %d — %s) | %s", profile.name, level, levelTierLabel(level), profile.summary))
-    printMsg("Modifiers: Hold ZL = SHIFT (Bar 2) | Hold ZR = CTRL (Bar 3) | ZL+ZR = Bar 4 | L = Interact | R = Target Nearest | R3 = Jump | L3 = Auto-Run | C = Map")
+    local _, specLabel = detectActiveSpec(token)
+    local specSuffix = specLabel and (" · Spec: " .. specLabel) or ""
+    printMsg(string.format("%s (Level %d — %s%s) | %s", profile.name, level, levelTierLabel(level), specSuffix, profile.summary))
+    printMsg("Modifiers: Hold ZR = Primary Combat | Hold ZL = Secondary/Utility | ZL+ZR = Cooldowns | L = Interact | R = Target Nearest | R3 = Jump | L3 = Auto-Run | C = Map")
 end
 
 local function printHelp()
@@ -1308,14 +1658,17 @@ local function printHelp()
     local level = UnitLevel("player") or 1
     local uiMode = isConsolePortLoaded() and "ConsolePort"
         or (isForeverGamepadUI() and "Forever Crossbar UI" or "Desktop UI")
-    printMsg(string.format("WoW: Forever Profiles v1.2.0 | Level %d %s | Preset: %s | Mode: %s",
-        level, tostring(playerClass or "?"), tostring(ns.selectedPreset or "AUTO"), uiMode))
+    local _, specLabel = playerClass and detectActiveSpec(playerClass) or nil
+    local specText = specLabel and (" [" .. specLabel .. "]") or ""
+    printMsg(string.format("WoW: Forever Profiles v1.3.0 | Level %d %s%s | Preset: %s | Mode: %s",
+        level, tostring(playerClass or "?"), specText, tostring(ns.selectedPreset or "AUTO"), uiMode))
     printMsg("Commands:")
-    printMsg("  /padwake apply [class] [--keep-bars] [--force-bindings]  Full setup: CVars, macros, bindings & level-aware bars")
-    printMsg("  /padwake bars [class] [--fill]                           Auto-assign your best known skills for your current level")
+    printMsg("  /padwake apply [class] [--keep-bars] [--force-bindings]  Full setup: CVars, macros, bindings, DialogueUI Switch & level/spec bars")
+    printMsg("  /padwake bars [class] [--fill]                           Auto-assign your best known skills for your current level & talent spec")
+    printMsg("  /padwake dialogue                                        Set DialogueUI InputDevice to Switch (A=Accept, B=Exit)")
     printMsg("  /padwake cvars [class]                                   Apply only optimized C_GamePad CVars")
     printMsg("  /padwake macros [class]                                  Create/update only PW_* starter macros")
-    printMsg("  /padwake info [class]                                    Show paddle & layout cheat sheet")
+    printMsg("  /padwake info [class]                                    Show detected spec, paddle & layout cheat sheet")
     printMsg("  /padwake slots                                           Inspect current skills on controller bar slots")
     printMsg("  /padwake reset                                           Clear PadWake PAD* bindings")
 end
@@ -1357,6 +1710,9 @@ local function handleSlash(msg)
     elseif sub == "inspect" then
         runInspect()
         return
+    elseif sub == "dialogue" then
+        configureDialogueUISwitchMode(true)
+        return
     end
 
     local token = resolveClassToken(classArg)
@@ -1369,6 +1725,7 @@ local function handleSlash(msg)
         applyCVars(token)
         applyMacros(token)
         applyBindings(token, forceBindings)
+        configureDialogueUISwitchMode(false)
         if not keepBars then
             populateBars(token, fillOnly)
         end
@@ -1401,6 +1758,7 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_LEVEL_UP")
 frame:RegisterEvent("LEARNED_SPELL_IN_TAB")
+frame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 frame:SetScript("OnEvent", function(_, event, newLevel)
     PadWakeProfilesCharDB = PadWakeProfilesCharDB or {}
     if event == "PLAYER_LOGIN" then
@@ -1408,7 +1766,8 @@ frame:SetScript("OnEvent", function(_, event, newLevel)
             local token = resolveClassToken(nil)
             if token then
                 local level = UnitLevel("player") or 1
-                local mode = isConsolePortLoaded() and "ConsolePort mode" or "Native C_GamePad mode"
+                local mode = isConsolePortLoaded() and "ConsolePort mode"
+                    or (isForeverGamepadUI() and "Forever Crossbar UI" or "Native C_GamePad mode")
                 printMsg(string.format("Ready for Level %d %s (%s). Type '/padwake apply' to set CVars, bindings & auto-assign skills.",
                     level, CLASS_PROFILES[token].name, mode))
             end
@@ -1421,6 +1780,21 @@ frame:SetScript("OnEvent", function(_, event, newLevel)
         if now - lastLearnHintTime > 10 then
             lastLearnHintTime = now
             printMsg("New spell learned! Type '/padwake bars' (or '/padwake bars --fill') to place it on your controller.")
+        end
+    elseif event == "UPDATE_SHAPESHIFT_FORM" then
+        if not isForeverGamepadUI() or not PadWakeProfilesCharDB.appliedClass or InCombatLockdown() then
+            return
+        end
+        local token = resolveClassToken(nil)
+        if not token then return end
+        local bonusKey, stanceLabel = activeBonusKeyForClass(token)
+        if not bonusKey or not stanceLabel then return end
+        PadWakeProfilesCharDB.populatedStances = PadWakeProfilesCharDB.populatedStances or {}
+        PadWakeProfilesCharDB.promptedStances = PadWakeProfilesCharDB.promptedStances or {}
+        if not PadWakeProfilesCharDB.populatedStances[bonusKey] and not PadWakeProfilesCharDB.promptedStances[bonusKey] then
+            PadWakeProfilesCharDB.promptedStances[bonusKey] = true
+            printMsg(string.format("Entered %s for the first time! Type '/padwake bars' to populate your %s ZR combat diamond.",
+                stanceLabel, stanceLabel))
         end
     end
 end)
