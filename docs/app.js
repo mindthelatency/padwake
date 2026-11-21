@@ -95,37 +95,30 @@
 
   // --- Install Method Tabs & Copy Button ---
   const SNIPPETS = {
-    app: {
-      code: `git clone https://github.com/mindthelatency/padwake.git\ncd padwake\nmake install-app`,
-      note: `Builds a Universal Binary, installs <code>/Applications/PadWake.app</code>, and opens it in your menu bar. Enable <strong>Launch at Login</strong> inside the popover and restart your game launcher once.`
-    },
-    cli: {
-      code: `make\n./bin/padwake enable\nmake install-daemon`,
-      note: `Compiles the standalone IOKit CLI and installs a background <code>LaunchAgent</code> that wakes on USB hotplug and persists <code>SDL_JOYSTICK_MFI=0</code>.`
-    },
-    release: {
-      code: `DEVELOPER_ID="Developer ID Application: Your Name (TEAMID)" \\\nNOTARY_PROFILE="padwake-notary" \\\nmake release`,
-      note: `Builds a Universal Binary (<code>arm64</code> + <code>x86_64</code>), signs with Hardened Runtime, packages a DMG, notarizes via <code>notarytool</code>, and staples the ticket.`
-    }
+    app: `git clone https://github.com/mindthelatency/padwake.git\ncd padwake\nmake install-app`,
+    cli: `make\n./bin/padwake enable\nmake install-daemon`,
+    release: `DEVELOPER_ID="Developer ID Application: Your Name (TEAMID)" \\\nNOTARY_PROFILE="padwake-notary" \\\nmake release`
   };
 
   const tabBtns = document.querySelectorAll(".tab-btn");
   const codeEl = document.getElementById("install-code");
-  const noteEl = document.getElementById("install-note");
+  const noteEls = document.querySelectorAll(".install-note[data-note]");
   const copyBtn = document.getElementById("copy-btn");
 
   tabBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       const key = btn.dataset.tab;
-      const spec = SNIPPETS[key];
-      if (!spec) return;
+      const code = SNIPPETS[key];
+      if (!code) return;
       tabBtns.forEach((b) => {
         const active = b === btn;
         b.classList.toggle("active", active);
         b.setAttribute("aria-selected", String(active));
       });
-      codeEl.textContent = spec.code;
-      noteEl.innerHTML = spec.note;
+      codeEl.textContent = code;
+      noteEls.forEach((el) => {
+        el.hidden = el.dataset.note !== key;
+      });
       copyBtn.textContent = "Copy";
     });
   });
