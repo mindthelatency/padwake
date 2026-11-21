@@ -38,7 +38,7 @@ Every class shares the same 4-layer modifier structure so switching specs or alt
 
 ## Applying In-Game (Native or ConsolePort)
 
-Install via **PadWake.app** (pick Forever, Classic, or Retail and click **Setup**) or `./scripts/install-wow-forever.sh`, then run in chat:
+Install via **PadWake.app** (pick Forever, Classic, or Retail and click **Setup**) or `./scripts/install-wow.sh`, then run in chat:
 
 ```text
 /padwake apply

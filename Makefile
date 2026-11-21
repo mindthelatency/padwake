@@ -53,10 +53,10 @@ watch: $(TARGET)
 	./$(TARGET) watch
 
 install-wow:
-	./scripts/install-wow-forever.sh
+	./scripts/install-wow.sh
 
 launch-wow: $(TARGET)
-	./scripts/launch-wow-forever.sh
+	./scripts/launch-wow.sh
 
 install-daemon: $(TARGET)
 	./scripts/install-launchagent.sh install

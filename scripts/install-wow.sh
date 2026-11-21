@@ -139,7 +139,7 @@ if [[ -d "$ADDON_SRC" ]]; then
 
     TMP_PRESET="$(mktemp "$ADDON_DST/.SelectedPreset.lua.XXXXXX")"
     cat > "$TMP_PRESET" <<EOF
--- Updated automatically by scripts/install-wow-forever.sh
+-- Updated automatically by scripts/install-wow.sh
 local _, ns = ...
 ns.selectedPreset = "${CLASS_TOKEN}"
 EOF
