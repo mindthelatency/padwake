@@ -23,6 +23,7 @@ open-app: app
 	open $(APP)
 
 install-app: app
+	-pkill -x PadWake 2>/dev/null || true
 	rm -rf /Applications/PadWake.app
 	cp -R $(APP) /Applications/PadWake.app
 	@echo "[app] Installed /Applications/PadWake.app"
