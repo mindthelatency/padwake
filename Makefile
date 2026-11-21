@@ -3,14 +3,15 @@ CFLAGS  := -Wall -Wextra -O2 -std=c11
 LDFLAGS := -framework IOKit -framework CoreFoundation
 
 TARGET  := bin/padwake
-SRC     := src/padwake_cli.c
+SRC     := src/padwake_cli.c src/padwake_core.c
+HDR     := src/padwake_core.h
 APP     := build/PadWake.app
 
 .PHONY: all clean enable status monitor watch app open-app install-app release preview-site install-wow launch-wow install-daemon uninstall-daemon
 
 all: $(TARGET)
 
-$(TARGET): $(SRC)
+$(TARGET): $(SRC) $(HDR)
 	@mkdir -p bin
 	$(CC) $(CFLAGS) $(SRC) -o $(TARGET) $(LDFLAGS)
 
